@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:skystream/core/addons/models/addon_meta.dart';
+import 'package:skystream/core/domain/entity/multimedia_item.dart';
 
 /// A meta payload is only ever as well-typed as the add-on that served it, and
 /// the meta fetch loop in `addon_providers.dart` answers a [TypeError] by
@@ -126,6 +127,63 @@ void main() {
       expect(parsed.trailers.single.key, '12345');
       expect(parsed.trailers.single.type, '9');
       expect(parsed.trailers.single.name, '10');
+    });
+  });
+
+  // Stremio direct play: bridges such as CNCVerse publish shows as `other`,
+  // and only their numbered episodes tell a show from a movie.
+  group('a show is a title with numbered episodes, whatever its type', () {
+    Map<String, dynamic> other(List<Map<String, dynamic>> videos) => {
+      'id': 'cnc:show',
+      'type': 'other',
+      'name': 'Money Heist',
+      'videos': videos,
+    };
+
+    test('other with numbered episodes is a show, its episodes in order', () {
+      final meta = AddonMeta.fromJson(
+        other([
+          {'id': 'cnc:e2', 'title': 'Two', 'season': '1', 'episode': '2'},
+          {'id': 'cnc:e1', 'title': 'One', 'season': '1', 'episode': '1'},
+          {'id': 'cnc:s2e1', 'title': 'Three', 'season': '2', 'episode': '1'},
+        ]),
+      );
+      expect(meta.hasEpisodes, isTrue);
+      expect(meta.isShow, isTrue);
+
+      final item = meta.toMultimediaItem(
+        addonUrl: 'https://addon.test/manifest.json',
+      );
+      expect(item.contentType, MultimediaContentType.series);
+      expect(item.episodes!.map((e) => e.url), [
+        'cnc:e1',
+        'cnc:e2',
+        'cnc:s2e1',
+      ]);
+      expect(item.addonType, 'other');
+      expect(item.addonUrl, 'https://addon.test/manifest.json');
+    });
+
+    test('other with no videos stays a movie', () {
+      final meta = AddonMeta.fromJson(other(const []));
+      expect(meta.hasEpisodes, isFalse);
+      expect(meta.isShow, isFalse);
+
+      final item = meta.toMultimediaItem();
+      expect(item.contentType, MultimediaContentType.movie);
+      expect(item.episodes, isNull);
+      expect(item.addonType, 'other');
+      expect(item.addonUrl, isNull);
+    });
+
+    test('a series is a show before its episodes are listed', () {
+      final meta = AddonMeta.fromJson({
+        'id': 'tt0944947',
+        'type': 'series',
+        'name': 'Game of Thrones',
+      });
+      expect(meta.isShow, isTrue);
+      expect(meta.toMultimediaItem().addonType, 'series');
     });
   });
 

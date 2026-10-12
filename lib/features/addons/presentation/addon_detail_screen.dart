@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:collection/collection.dart';
 import 'package:dpad/dpad.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,19 +9,26 @@ import '../../../core/addons/data/addon_client.dart';
 import '../../../core/addons/data/addon_repository.dart';
 import '../../../core/addons/data/addon_stream_service.dart';
 import '../../../core/network/clearance/clearance.dart';
+import '../../../core/addons/models/addon_manifest.dart';
 import '../../../core/addons/models/addon_meta.dart';
+import '../../../core/domain/entity/multimedia_item.dart';
 import '../../../core/utils/responsive_breakpoints.dart';
-import '../../../shared/widgets/cards_wrapper.dart';
-import '../../../shared/widgets/desktop_scroll_wrapper.dart';
 import '../../../shared/widgets/shimmer_placeholder.dart';
 import '../../../shared/widgets/thumbnail_error_placeholder.dart';
 import '../../../core/models/tmdb_details.dart';
+import '../../../core/storage/episode_watch_repository.dart';
+import '../../../core/storage/history_repository.dart';
 import '../../details/data/tmdb_details_provider.dart';
 import '../../details/presentation/widgets/movie_cast_list.dart';
 import '../../details/presentation/widgets/movie_production_companies.dart';
 import '../../details/presentation/widgets/movie_trailers_carousel.dart';
+import '../../library/presentation/history_provider.dart';
+import 'addon_direct_play.dart';
+import 'addon_own_links.dart';
 import 'addon_providers.dart';
 import 'addon_sources_sheet.dart';
+import 'widgets/addon_episode_card.dart';
+import 'widgets/addon_play_button.dart';
 import 'widgets/stremio_sources_card.dart';
 import '../../../shared/focus/app_focus.dart';
 import '../../../shared/widgets/check_line.dart';
@@ -50,7 +58,6 @@ class _AddonDetailScreenState extends ConsumerState<AddonDetailScreen> {
   bool _isDescriptionExpanded = false;
 
   final ScrollController _scrollController = ScrollController();
-  final ScrollController _episodesScrollController = ScrollController();
   final ValueNotifier<bool> _showAppBarTitle = ValueNotifier<bool>(false);
   final ValueNotifier<double> _titleOpacity = ValueNotifier<double>(0.0);
   final ValueNotifier<double> _contentOpacity = ValueNotifier<double>(1.0);
@@ -78,7 +85,6 @@ class _AddonDetailScreenState extends ConsumerState<AddonDetailScreen> {
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
-    _episodesScrollController.dispose();
     _showAppBarTitle.dispose();
     _titleOpacity.dispose();
     _contentOpacity.dispose();
@@ -148,7 +154,10 @@ class _AddonDetailScreenState extends ConsumerState<AddonDetailScreen> {
         elevation: 0,
         leading: const BackButton(),
       ),
-      body: Padding(
+      // Scrollable only so that it fits: a phone held sideways is shorter
+      // than the placeholder.
+      body: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
         padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -277,10 +286,7 @@ class _AddonDetailScreenState extends ConsumerState<AddonDetailScreen> {
     final tmdbAsync = meta.moviedbId != null
         ? ref.watch(
             tmdbDetailsProvider(
-              MovieDetailsParams(
-                meta.moviedbId!,
-                meta.isSeries ? 'tv' : 'movie',
-              ),
+              MovieDetailsParams(meta.moviedbId!, meta.isShow ? 'tv' : 'movie'),
             ),
           )
         : null;
@@ -442,7 +448,7 @@ class _AddonDetailScreenState extends ConsumerState<AddonDetailScreen> {
                             ),
                             _buildTopBadge(
                               context,
-                              meta.isSeries ? 'SERIES' : 'MOVIE',
+                              meta.isShow ? 'SERIES' : 'MOVIE',
                             ),
                             if (year.isNotEmpty)
                               _buildIconInfo(
@@ -496,6 +502,7 @@ class _AddonDetailScreenState extends ConsumerState<AddonDetailScreen> {
                           ),
                         ],
                         const SizedBox(height: 24),
+                        _buildPlayButton(context, meta, compact: true),
                         _buildSourcesCard(context, meta, compact: true),
                       ],
                     ),
@@ -554,10 +561,7 @@ class _AddonDetailScreenState extends ConsumerState<AddonDetailScreen> {
     final tmdbAsync = meta.moviedbId != null
         ? ref.watch(
             tmdbDetailsProvider(
-              MovieDetailsParams(
-                meta.moviedbId!,
-                meta.isSeries ? 'tv' : 'movie',
-              ),
+              MovieDetailsParams(meta.moviedbId!, meta.isShow ? 'tv' : 'movie'),
             ),
           )
         : null;
@@ -731,9 +735,7 @@ class _AddonDetailScreenState extends ConsumerState<AddonDetailScreen> {
                                   Text(
                                     meta.genres.isNotEmpty
                                         ? meta.genres.take(3).join(' • ')
-                                        : (meta.isSeries
-                                              ? 'TV Series'
-                                              : 'Movie'),
+                                        : (meta.isShow ? 'TV Series' : 'Movie'),
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       color: theme.colorScheme.onSurface
@@ -763,6 +765,7 @@ class _AddonDetailScreenState extends ConsumerState<AddonDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                _buildPlayButton(context, meta),
                 _buildSourcesCard(context, meta),
                 const SizedBox(height: 16),
 
@@ -778,7 +781,7 @@ class _AddonDetailScreenState extends ConsumerState<AddonDetailScreen> {
                           ? meta.addonName.toUpperCase()
                           : 'ADD-ON',
                     ),
-                    _buildTopBadge(context, meta.isSeries ? 'SERIES' : 'MOVIE'),
+                    _buildTopBadge(context, meta.isShow ? 'SERIES' : 'MOVIE'),
                     if (year.isNotEmpty)
                       _buildIconInfo(
                         context,
@@ -899,6 +902,51 @@ class _AddonDetailScreenState extends ConsumerState<AddonDetailScreen> {
     );
   }
 
+  /// [meta] as the item this page hands on, naming the install that
+  /// described it - Continue Watching reopens the title through it - or the
+  /// route's add-on when none of the enabled ones is that add-on (Cinemeta is
+  /// built in).
+  MultimediaItem _itemOf(AddonMeta meta) => meta.toMultimediaItem(
+    addonUrl:
+        describingAddon(
+          enabled: ref.watch(addonRepositoryProvider).enabled,
+          meta: meta,
+          routeAddonUrl: widget.addonUrl,
+        )?.manifestUrl ??
+        widget.addonUrl,
+  );
+
+  /// Play, when the add-on that described the title serves its links
+  /// (Stremio direct play): [AddonPlayButton] stays out of sight until one
+  /// came back. Nothing for a title its add-on only describes.
+  Widget _buildPlayButton(
+    BuildContext context,
+    AddonMeta meta, {
+    bool compact = false,
+  }) {
+    final addon = ownStreamAddon(
+      enabled: ref.watch(addonRepositoryProvider).enabled,
+      meta: meta,
+      routeAddonUrl: widget.addonUrl,
+    );
+    if (addon == null) return const SizedBox.shrink();
+    final target = addonPlayTarget(
+      meta,
+      history: ref.watch(historyRepositoryProvider),
+      watched: ref.watch(episodeWatchRepositoryProvider),
+      lastWatched: ref
+          .watch(watchHistoryProvider)
+          .firstWhereOrNull((h) => h.item.url == meta.id),
+    );
+    if (meta.isShow && target == null) return const SizedBox.shrink();
+    return AddonPlayButton(
+      meta: meta,
+      addon: addon,
+      target: target,
+      compact: compact,
+    );
+  }
+
   /// The Stremio source card, in the same place the "Play from add-ons"
   /// button used to sit.
   ///
@@ -910,7 +958,7 @@ class _AddonDetailScreenState extends ConsumerState<AddonDetailScreen> {
     AddonMeta meta, {
     bool compact = false,
   }) {
-    final item = meta.toMultimediaItem();
+    final item = _itemOf(meta);
 
     final seasons = meta.seasons;
     final activeSeason =
@@ -921,7 +969,7 @@ class _AddonDetailScreenState extends ConsumerState<AddonDetailScreen> {
     // A series resolves one episode - the first of the selected season - and
     // the label says which. Anything else is reached from the episode list
     // further down, which opens the same sheet per episode.
-    final isEpisode = meta.isSeries && firstVideo != null;
+    final isEpisode = meta.isShow && firstVideo != null;
 
     return StremioSourcesCard(
       compact: compact,
@@ -1048,7 +1096,7 @@ class _AddonDetailScreenState extends ConsumerState<AddonDetailScreen> {
     final activeSeason =
         _selectedSeason ?? (seasons.isEmpty ? 1 : seasons.first);
     final episodes = meta.episodesForSeason(activeSeason);
-    final item = meta.toMultimediaItem();
+    final item = _itemOf(meta);
 
     const int batchSize = 20;
     final int totalEpisodes = episodes.length;
@@ -1075,8 +1123,17 @@ class _AddonDetailScreenState extends ConsumerState<AddonDetailScreen> {
       season: video.season,
       episode: video.episode,
       imdbId: meta.imdbId,
+      tmdbId: meta.moviedbId,
       title: meta.name,
       year: meta.year,
+    );
+
+    // The add-on that described the title, when it serves its links: a tap
+    // then plays the episode from it (Stremio direct play).
+    final own = ownStreamAddon(
+      enabled: ref.watch(addonRepositoryProvider).enabled,
+      meta: meta,
+      routeAddonUrl: widget.addonUrl,
     );
 
     return Column(
@@ -1261,153 +1318,126 @@ class _AddonDetailScreenState extends ConsumerState<AddonDetailScreen> {
             ),
           )
         else
-          SizedBox(
-            height: 240,
-            child: DesktopScrollWrapper(
-              controller: _episodesScrollController,
-              child: ListView.separated(
-                clipBehavior: Clip.none,
-                controller: _episodesScrollController,
-                scrollDirection: Axis.horizontal,
-                itemCount: displayedEpisodes.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 16),
-                itemBuilder: (context, index) {
-                  final video = displayedEpisodes[index];
-                  final episode = video.toEpisode();
-                  final episodeNum = video.episode ?? (start + index + 1);
-                  final episodeTitle = video.title.isNotEmpty
-                      ? video.title
-                      : 'Episode $episodeNum';
-
-                  return CardsWrapper(
-                    onTap: () => AddonSourcesSheet.open(
-                      context,
-                      item: item,
-                      request: requestFor(video),
-                      episode: episode,
-                      playlist: meta.videos,
-                    ),
-                    borderRadius: BorderRadius.circular(10),
-                    child: Container(
-                      width: 290,
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceContainerHighest
-                            .withValues(alpha: 0.45),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      clipBehavior: Clip.antiAlias,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+          // As a CloudStream title's (DetailsScreen): side by side as wide as
+          // the page allows, one under another on a phone.
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final columns = (constraints.maxWidth / 480).ceil().clamp(1, 5);
+              final rows = (displayedEpisodes.length / columns).ceil();
+              return Column(
+                children: [
+                  for (var row = 0; row < rows; row++) ...[
+                    if (row > 0) const SizedBox(height: 16),
+                    IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Expanded(
-                            child:
-                                video.thumbnail == null ||
-                                    video.thumbnail!.isEmpty
-                                ? Container(
-                                    color: theme
-                                        .colorScheme
-                                        .surfaceContainerHighest,
-                                    child: const Center(
-                                      child: Icon(
-                                        Icons.play_circle_outline_rounded,
-                                        size: 36,
-                                      ),
-                                    ),
-                                  )
-                                : CachedNetworkImage(
-                                    imageUrl: video.thumbnail!,
-                                    fit: BoxFit.cover,
-                                    width: double.infinity,
-                                    placeholder: (context, url) =>
-                                        ShimmerPlaceholder.rectangular(
-                                          borderRadius: 10,
-                                        ),
-                                    errorWidget: (_, _, _) =>
-                                        ThumbnailErrorPlaceholder(
-                                          label: episodeTitle,
-                                        ),
-                                  ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'E$episodeNum • $episodeTitle',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: theme.colorScheme.onSurface,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
+                          for (var column = 0; column < columns; column++)
+                            Expanded(
+                              child: Padding(
+                                padding: EdgeInsets.only(
+                                  left: column == 0 ? 0 : 8,
+                                  right: column == columns - 1 ? 0 : 8,
                                 ),
-                                const SizedBox(height: 6),
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 5,
-                                        vertical: 2,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: theme.colorScheme.primary
-                                            .withValues(alpha: 0.15),
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Text(
-                                        meta.addonName.isNotEmpty
-                                            ? meta.addonName.toUpperCase()
-                                            : 'ADD-ON',
-                                        style: TextStyle(
-                                          color: theme.colorScheme.primary,
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.bold,
+                                child:
+                                    row * columns + column <
+                                        displayedEpisodes.length
+                                    ? _buildEpisodeCard(
+                                        context,
+                                        meta,
+                                        displayedEpisodes[row * columns +
+                                            column],
+                                        own: own,
+                                        item: item,
+                                        request: requestFor(
+                                          displayedEpisodes[row * columns +
+                                              column],
                                         ),
-                                      ),
-                                    ),
-                                    if (video.released != null &&
-                                        video.released!.isNotEmpty) ...[
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        video.released!.split('T').first,
-                                        style: TextStyle(
-                                          color: theme.colorScheme.onSurface
-                                              .withValues(alpha: 0.7),
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                                if (video.overview != null &&
-                                    video.overview!.isNotEmpty) ...[
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    video.overview!,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      color: theme.colorScheme.onSurface
-                                          .withValues(alpha: 0.7),
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ],
+                                      )
+                                    : const SizedBox.shrink(),
+                              ),
                             ),
-                          ),
                         ],
                       ),
                     ),
-                  );
-                },
-              ),
-            ),
+                  ],
+                ],
+              );
+            },
           ),
       ],
+    );
+  }
+
+  /// An episode's card: a tap plays it from [own] when the title's add-on
+  /// serves its links, else opens every add-on's list for it, as a long
+  /// press always does (Stremio direct play).
+  Widget _buildEpisodeCard(
+    BuildContext context,
+    AddonMeta meta,
+    AddonVideo video, {
+    required ManagedAddon? own,
+    required MultimediaItem item,
+    required AddonStreamRequest request,
+  }) {
+    void search() => AddonSourcesSheet.open(
+      context,
+      item: item,
+      request: request,
+      episode: video.toEpisode(),
+      playlist: meta.videos,
+    );
+    return AddonEpisodeCard(
+      key: ValueKey(video.id),
+      video: video,
+      showUrl: meta.id,
+      loading: _askingFor == video.id,
+      onTap: own == null
+          ? search
+          : () => _playEpisode(meta, video, own, request),
+      onLongPress: search,
+    );
+  }
+
+  /// The episode whose links are being asked for: its card shows a spinner.
+  String? _askingFor;
+
+  /// Plays [video] from [own]. Asked while someone waits, so a bot check that
+  /// wants a click opens its sheet; with no link from it, every add-on's list
+  /// opens for the episode instead.
+  Future<void> _playEpisode(
+    AddonMeta meta,
+    AddonVideo video,
+    ManagedAddon own,
+    AddonStreamRequest request,
+  ) async {
+    if (_askingFor != null) return;
+    setState(() => _askingFor = video.id);
+    final links = await ownPlayableLinks(
+      ref.read(addonStreamServiceProvider),
+      own,
+      request,
+      personWaiting: true,
+    );
+    if (!mounted) return;
+    setState(() => _askingFor = null);
+    if (links.isEmpty) {
+      await AddonSourcesSheet.open(
+        context,
+        item: meta.toMultimediaItem(addonUrl: own.manifestUrl),
+        request: request,
+        episode: video.toEpisode(),
+        playlist: meta.videos,
+      );
+      return;
+    }
+    await playAddonLinks(
+      context,
+      ref,
+      item: meta.toMultimediaItem(addonUrl: own.manifestUrl),
+      request: request,
+      links: links,
+      episode: video.toEpisode(),
     );
   }
 
@@ -1431,7 +1461,7 @@ class _AddonDetailScreenState extends ConsumerState<AddonDetailScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          meta.isSeries ? 'SHOW DETAILS' : 'MOVIE DETAILS',
+          meta.isShow ? 'SHOW DETAILS' : 'MOVIE DETAILS',
           style: TextStyle(
             color: theme.colorScheme.onSurface,
             fontSize: 16,
@@ -1440,7 +1470,7 @@ class _AddonDetailScreenState extends ConsumerState<AddonDetailScreen> {
           ),
         ),
         const SizedBox(height: 16),
-        _buildDetailRow('Type', meta.isSeries ? 'Series' : 'Movie', theme),
+        _buildDetailRow('Type', meta.isShow ? 'Series' : 'Movie', theme),
         if (status != null && status.isNotEmpty)
           _buildDetailRow('Status', status, theme),
         if (director != null && director.isNotEmpty)

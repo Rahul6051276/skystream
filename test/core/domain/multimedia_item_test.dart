@@ -112,4 +112,40 @@ void main() {
     expect(episode.airedAt, aired);
     expect(episode.airedAt!.isUtc, isTrue);
   });
+
+  test("a Stremio title's add-on and published type survive JSON and "
+      'copyWith', () {
+    // What the player asks for the next episode, and what Continue Watching
+    // reopens the title with (Stremio direct play).
+    final item = MultimediaItem(
+      title: 'Money Heist',
+      url: 'cnc:show',
+      posterUrl: '',
+      addonUrl: 'https://addon.test/u/x/manifest.json',
+      addonType: 'other',
+    );
+    final back = _roundTrip(item);
+    expect(back.addonUrl, 'https://addon.test/u/x/manifest.json');
+    expect(back.addonType, 'other');
+    final copy = back.copyWith(title: 'Money Heist (2017)');
+    expect(copy.addonUrl, item.addonUrl);
+    expect(copy.addonType, 'other');
+
+    // The add-on whose link plays, which the player route carries as JSON.
+    final playing = _roundTrip(
+      item.copyWith(streamAddonUrl: 'https://torrentio.test/manifest.json'),
+    );
+    expect(playing.streamAddonUrl, 'https://torrentio.test/manifest.json');
+    expect(playing.addonUrl, 'https://addon.test/u/x/manifest.json');
+
+    // History written before them reads as no add-on at all.
+    final old = MultimediaItem.fromJson({
+      'title': 'T',
+      'url': 'u',
+      'posterUrl': '',
+    });
+    expect(old.addonUrl, isNull);
+    expect(old.streamAddonUrl, isNull);
+    expect(old.addonType, isNull);
+  });
 }

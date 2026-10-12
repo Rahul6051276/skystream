@@ -205,7 +205,9 @@ void main() {
     // against the source: the route is the launcher's to push, because the
     // launcher is what reads "Default Player".
     const List<String> files = <String>[
+      'lib/features/addons/presentation/addon_direct_play.dart',
       'lib/features/addons/presentation/addon_sources_sheet.dart',
+      'lib/features/addons/presentation/widgets/addon_play_button.dart',
       'lib/features/home/presentation/widgets/continue_watching_card.dart',
       'lib/features/sources/presentation/plugin_sources_sheet.dart',
     ];

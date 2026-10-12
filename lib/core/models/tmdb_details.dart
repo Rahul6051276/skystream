@@ -302,6 +302,11 @@ class TmdbDetails extends MultimediaItem {
     int? tmdbId,
     String? imdbId,
     String? source,
+    // A TMDB title is never a Stremio add-on's item: accepted for the
+    // override, and not kept.
+    String? addonUrl,
+    String? streamAddonUrl,
+    String? addonType,
     // Subclass specific fields:
     int? id,
     String? mediaType,

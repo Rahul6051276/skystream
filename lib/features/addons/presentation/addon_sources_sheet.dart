@@ -7,10 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/addons/data/addon_client.dart';
-import '../../../core/addons/data/addon_playback_launcher.dart';
 import '../../../core/addons/data/addon_repository.dart';
 import '../../../core/addons/data/addon_stream_service.dart';
-import '../../../core/addons/data/debrid_service.dart';
 import '../../../core/addons/models/addon_manifest.dart';
 import '../../../core/addons/models/addon_meta.dart';
 import '../../../core/addons/models/addon_stream_source.dart';
@@ -23,9 +21,8 @@ import '../../../shared/focus/app_focus.dart';
 import '../../../shared/focus/row_traversal.dart';
 import '../../../shared/focus/text_field_keys.dart';
 import '../../../shared/widgets/check_line.dart';
-import '../../details/presentation/playback_launcher.dart';
-import '../../settings/presentation/player_settings_provider.dart';
 import '../../sources/presentation/source_sheet_widgets.dart';
+import 'addon_direct_play.dart';
 
 /// Add-on sources sheet: play or download a title using **only** the links
 /// returned by installed add-ons.
@@ -304,72 +301,25 @@ class _AddonSourcesSheetState extends ConsumerState<AddonSourcesSheet> {
       return;
     }
 
-    final ordered = _playable;
-    var selected = stream;
-    if (stream.isTorrent && ref.read(debridSettingsProvider).isConfigured) {
-      setState(() => _debridStatus = 'Checking debrid…');
-      try {
-        final link = await ref
-            .read(debridServiceProvider)
-            .resolveMagnet(
-              stream.magnetUri ?? '',
-              preferredFilename: stream.filename,
-              onStatus: (status) {
-                if (mounted) setState(() => _debridStatus = status);
-              },
-            );
-        if (link != null) {
-          selected = AddonStreamSource(
-            addonId: stream.addonId,
-            addonName: stream.addonName,
-            url: link.url,
-            name: stream.name,
-            title: stream.title,
-            description: stream.description,
-            videoSize: link.sizeBytes ?? stream.videoSize,
-            filename: link.filename ?? stream.filename,
-            bingeGroup: stream.bingeGroup,
-            subtitles: stream.subtitles,
-          );
-        }
-      } catch (_) {
-        // Fall through to the magnet.
-      } finally {
-        if (mounted) setState(() => _debridStatus = null);
-      }
-    }
-
-    final converter = ref.read(addonStreamConverterProvider);
-    final streams = converter.toStreamResults(ordered, selected: selected);
-    if (!mounted) return;
-    if (streams.isEmpty) {
+    final played = await playAddonLinks(
+      context,
+      ref,
+      item: widget.item,
+      request: widget.request,
+      links: _playable,
+      selected: stream,
+      episode: widget.episode,
+      onStatus: (status) {
+        if (mounted) setState(() => _debridStatus = status);
+      },
+      // The sheet goes before the player comes up.
+      beforeLaunch: () => Navigator.of(context).pop(),
+    );
+    if (!played && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('This source has no playable link.')),
       );
-      return;
     }
-
-    // Which player opens this is a setting, so it is the launcher's call, not
-    // the sheet's. Resolved here rather than inside the launcher because the
-    // sheet is about to pop and a cold settings box would otherwise finish
-    // loading after its context is gone.
-    final launcher = ref.read(playbackLauncherProvider);
-    await ref.read(playerSettingsProvider.future);
-    if (!mounted) return;
-
-    Navigator.of(context).pop();
-    unawaited(
-      launcher.playResolved(
-        context,
-        item: widget.item,
-        videoUrl: converter.videoUrlFor(
-          contentId: widget.request.contentId,
-          videoId: widget.request.videoId,
-        ),
-        episode: converter.episodeFor(widget.episode, widget.request.videoId),
-        streams: streams,
-      ),
-    );
   }
 
   Future<void> _openExternally(AddonStreamSource stream) async {

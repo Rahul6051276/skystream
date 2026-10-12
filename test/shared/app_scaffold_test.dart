@@ -55,6 +55,34 @@ class _TapProbe extends StatelessWidget {
   );
 }
 
+/// Home without a provider, in miniature: the header's two arrows in the top
+/// left, and in the middle of the page a row of two buttons.
+class _HeaderAndRow extends StatelessWidget {
+  const _HeaderAndRow({required this.nodes});
+
+  /// back and forward in the header; first and second in the row.
+  final Map<String, FocusNode> nodes;
+
+  Widget _button(String name) =>
+      TextButton(focusNode: nodes[name], onPressed: () {}, child: Text(name));
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Row(children: [_button('back'), _button('forward')]),
+      Expanded(
+        child: Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [_button('first'), _button('second')],
+          ),
+        ),
+      ),
+    ],
+  );
+}
+
 /// Stands in for the player route: a top-level page, opaque, carrying a
 /// [MouseRegion] that *defers* - which is exactly what the real player asks
 /// for while its bars are visible.
@@ -103,11 +131,13 @@ void main() {
   }
 
   /// The production shape in miniature: the five shell branches under
-  /// [AppScaffold], and the player beside them as a top-level route.
+  /// [AppScaffold], and the player beside them as a top-level route. Each
+  /// branch shows [page], or a tap probe.
   Future<GoRouter> pumpShell(
     WidgetTester tester, {
     required bool isTv,
     Size physicalSize = _tvPhysical,
+    Widget Function()? page,
   }) async {
     tester.view.physicalSize = physicalSize;
     tester.view.devicePixelRatio = 2;
@@ -131,7 +161,7 @@ void main() {
                 routes: [
                   GoRoute(
                     path: path,
-                    builder: (_, _) => _TapProbe(taps: taps),
+                    builder: (_, _) => page?.call() ?? _TapProbe(taps: taps),
                   ),
                 ],
               ),
@@ -320,6 +350,54 @@ void main() {
 
       router.pop();
       await tester.pumpAndSettle();
+    });
+  });
+
+  group('Left on a remote', () {
+    /// Focus nodes for [_HeaderAndRow]'s buttons, with [name] focused.
+    Future<void> pumpRowsWith(WidgetTester tester, String name) async {
+      final nodes = {
+        for (final button in const ['back', 'forward', 'first', 'second'])
+          button: FocusNode(debugLabel: button),
+      };
+      addTearDown(() {
+        for (final node in nodes.values) {
+          node.dispose();
+        }
+      });
+      await pumpShell(
+        tester,
+        isTv: true,
+        page: () => _HeaderAndRow(nodes: nodes),
+      );
+      nodes[name]!.requestFocus();
+      await tester.pump();
+    }
+
+    Future<String?> pressLeft(WidgetTester tester) async {
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+      await tester.pumpAndSettle();
+      return FocusManager.instance.primaryFocus?.debugLabel;
+    }
+
+    testWidgets('moves along its row', (tester) async {
+      await pumpRowsWith(tester, 'second');
+      expect(await pressLeft(tester), 'first');
+    });
+
+    testWidgets('with nothing beside it in its row, goes to the rail - not '
+        'up to the header', (tester) async {
+      // Home without a provider: Left from Select Provider went to the
+      // header's arrows, nowhere near where the remote pointed.
+      await pumpRowsWith(tester, 'first');
+      expect(await pressLeft(tester), 'sidebar_0');
+    });
+
+    testWidgets('from the start of the header, goes to the rail', (
+      tester,
+    ) async {
+      await pumpRowsWith(tester, 'back');
+      expect(await pressLeft(tester), 'sidebar_0');
     });
   });
 }

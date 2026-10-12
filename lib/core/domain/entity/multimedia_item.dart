@@ -162,6 +162,22 @@ class MultimediaItem {
   final String? imdbId;
   final String? source;
 
+  /// The manifest URL of the Stremio add-on that described this title, for an
+  /// add-on item: Continue Watching reopens the title through it, and the
+  /// player asks it for the next episode's links unless [streamAddonUrl]
+  /// names another.
+  final String? addonUrl;
+
+  /// The manifest URL of the Stremio add-on whose link is playing, when one
+  /// is: the player asks it for the next episode's links, as Stremio goes on
+  /// with the add-on a show started on. A link picked from another add-on's
+  /// (Torrentio's, for a title Cinemeta described) leaves [addonUrl] as it is.
+  final String? streamAddonUrl;
+
+  /// The type that add-on published the title as (`movie`, `series`, `other`,
+  /// `tv`...). Bridges such as CNCVerse answer only on the type they published.
+  final String? addonType;
+
   MultimediaItem({
     required this.title,
     required this.url,
@@ -192,6 +208,9 @@ class MultimediaItem {
     this.tmdbId,
     this.imdbId,
     this.source,
+    this.addonUrl,
+    this.streamAddonUrl,
+    this.addonType,
   }) : episodes = episodes != null
            ? (List<Episode>.from(episodes)..sort((a, b) {
                if (a.season != b.season) return a.season.compareTo(b.season);
@@ -312,6 +331,9 @@ class MultimediaItem {
       tmdbId: (json['tmdbId'] as int?) ?? _syncTmdbId(syncData),
       imdbId: (json['imdbId'] as String?) ?? _syncImdbId(syncData),
       source: json['source'] as String?,
+      addonUrl: json['addonUrl'] as String?,
+      streamAddonUrl: json['streamAddonUrl'] as String?,
+      addonType: json['addonType'] as String?,
     );
   }
 
@@ -471,6 +493,9 @@ class MultimediaItem {
     int? tmdbId,
     String? imdbId,
     String? source,
+    String? addonUrl,
+    String? streamAddonUrl,
+    String? addonType,
   }) {
     return MultimediaItem(
       title: title ?? this.title,
@@ -502,6 +527,9 @@ class MultimediaItem {
       tmdbId: tmdbId ?? this.tmdbId,
       imdbId: imdbId ?? this.imdbId,
       source: source ?? this.source,
+      addonUrl: addonUrl ?? this.addonUrl,
+      streamAddonUrl: streamAddonUrl ?? this.streamAddonUrl,
+      addonType: addonType ?? this.addonType,
     );
   }
 
@@ -536,6 +564,9 @@ class MultimediaItem {
       'imdbId': imdbId,
       'streams': streams?.map((s) => s.toJson()).toList(),
       'source': source,
+      'addonUrl': addonUrl,
+      'streamAddonUrl': streamAddonUrl,
+      'addonType': addonType,
     };
   }
 

@@ -144,7 +144,9 @@ class AddonMetaPreview {
     return null;
   }
 
-  MultimediaItem toMultimediaItem() {
+  /// [addonUrl]: the manifest URL of the install to ask for this title's
+  /// links later, when the caller knows it.
+  MultimediaItem toMultimediaItem({String? addonUrl}) {
     return MultimediaItem(
       title: name,
       url: id,
@@ -163,6 +165,8 @@ class AddonMetaPreview {
       // Marks the item as add-on owned so Continue Watching reopens it in the
       // add-on stack instead of the plugin details screen.
       source: kAddonItemSource,
+      addonUrl: addonUrl,
+      addonType: streamRequestType,
     );
   }
 }
@@ -509,10 +513,24 @@ class AddonMeta extends AddonMetaPreview {
     );
   }
 
+  /// Whether the add-on lists episodes numbered by season. Bridges such as
+  /// CNCVerse publish shows as `other`, so the type alone misses them.
+  bool get hasEpisodes =>
+      videos.any((v) => (v.season ?? 0) > 0 && (v.episode ?? 0) > 0);
+
+  /// A show, by its type or by its episodes.
+  bool get isShow => isSeries || hasEpisodes;
+
   @override
-  MultimediaItem toMultimediaItem() {
-    final base = super.toMultimediaItem();
+  MultimediaItem toMultimediaItem({String? addonUrl}) {
+    final base = super.toMultimediaItem(addonUrl: addonUrl);
     return base.copyWith(
+      // The player's next episode and history's per-episode progress both go
+      // by a series type and the episode list.
+      contentType: isShow
+          ? MultimediaContentType.series
+          : MultimediaContentType.movie,
+      episodes: isShow ? [for (final video in videos) video.toEpisode()] : null,
       tmdbId: moviedbId ?? base.tmdbId,
       cast: castMembers.isNotEmpty
           ? castMembers

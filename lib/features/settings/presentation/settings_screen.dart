@@ -64,16 +64,17 @@ class SettingsScreen extends ConsumerWidget {
                       onTap: () => const ExtensionsRoute().go(context),
                     ),
                     SettingsTile(
+                      icon: Icons.cloud_rounded,
+                      title: l10n.cloudStreamExtensions,
+                      isBeta: true,
+                      subtitle: l10n.cloudStreamExtensionsSubtitle,
+                      onTap: () => const CloudStreamRoute().go(context),
+                    ),
+                    SettingsTile(
                       icon: Icons.hub_rounded,
                       title: 'Nuvio Plugins',
                       subtitle: 'Manage and configure Nuvio scrapers',
                       onTap: () => const NuvioPluginsRoute().go(context),
-                    ),
-                    SettingsTile(
-                      icon: Icons.cloud_rounded,
-                      title: l10n.cloudStreamExtensions,
-                      subtitle: l10n.cloudStreamExtensionsSubtitle,
-                      onTap: () => const CloudStreamRoute().go(context),
                     ),
                     SettingsTile(
                       icon: Icons.dashboard_customize_rounded,

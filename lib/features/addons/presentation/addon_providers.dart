@@ -239,7 +239,20 @@ Future<AddonMeta?> addonMeta(
   String id, {
   String? preferredAddonUrl,
 }) async {
-  final addons = ref.watch(addonRepositoryProvider).enabled;
+  // Asked again only when the add-ons that could describe the title change:
+  // the update check at launch reads every manifest again, unchanged, and an
+  // open page - its reload held while the player covered it - met a viewer
+  // back from an episode with the loading placeholder, for as long as a
+  // bridge takes to describe a title.
+  ref.watch(
+    addonRepositoryProvider.select(
+      (s) => [
+        for (final a in s.enabled)
+          if (a.manifest?.hasResource('meta') ?? false) a.manifestUrl,
+      ].join('\n'),
+    ),
+  );
+  final addons = ref.read(addonRepositoryProvider).enabled;
   final client = ref.watch(addonClientProvider);
 
   final candidates = addons

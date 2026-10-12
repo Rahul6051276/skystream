@@ -13,6 +13,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart'
 import 'package:vlc_player/vlc_player.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
+import '../../../../core/addons/models/addon_meta.dart' show kAddonItemSource;
 import '../../../../core/domain/entity/multimedia_item.dart';
 import '../../../../core/network/clearance/clearance.dart';
 import '../../../../core/network/dio_client_provider.dart';
@@ -1096,8 +1097,13 @@ class _VlcPlayerScreenState extends ConsumerState<VlcPlayerScreen>
           },
         );
     try {
+      // A Stremio item's next episode is asked of its add-on, which the
+      // item names as its provider.
       _pluginName = _preloaded == null
-          ? pluginFor(_read, widget.item, _videoUrl)?.name
+          ? pluginFor(_read, widget.item, _videoUrl)?.name ??
+                (widget.item.source == kAddonItemSource
+                    ? widget.item.provider
+                    : null)
           : null;
       _linksAskedAt = DateTime.now();
       // Plugin resolution is a network round trip and can be the longest part
@@ -4608,6 +4614,9 @@ class _VlcPlayerScreenState extends ConsumerState<VlcPlayerScreen>
     _revertTo = null;
     _attemptRetries = 0;
     _liveReconnects = 0;
+    // A Stremio title's links came from its add-on, and by now every one of
+    // them has failed - or expired, on a page left open: ask it again.
+    if (widget.item.source == kAddonItemSource) _preloaded = null;
     setState(() {
       _stage = _Stage.resolving;
       _error = '';

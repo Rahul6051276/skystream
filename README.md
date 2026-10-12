@@ -107,11 +107,13 @@ SkyStream is a modern, media streaming client. It draws inspiration from the ver
 - 🔄 **Multi-Tracker Sync** – Keep your watch list and progress synchronized across **Trakt**, **Simkl**, **MyAnimeList (MAL)**, and **AniList**
 - ⏭️ **Smart Skip (Intro/Outro)** – Seamlessly skip intro and outro sequences using **IntroDB** and **Anime Skip** integration
 
-### 🌐 Multi-Provider & Plugin System
-- 🔌 **Plugin-Based Architecture** – Extend functionality with custom plugins  
-- 🔁 **Multi-Provider Support** – Access multiple content sources within a single plugin  
-- 🌍 **Domain Switching** – Switch domains seamlessly for better availability  
-- 🪵 **In-App Logs (Developer Tools)** – Debug plugins directly inside the app
+### 🧩 Extensions: SkyStream, CloudStream, Nuvio & Stremio
+SkyStream plays from four kinds of extensions, side by side. Install and manage each of them in **Settings → Extensions**.
+- 🔌 **SkyStream plugins** – SkyStream's own JavaScript providers. One plugin can carry several providers, follow a site to its new domain, and log what it does in the app's developer tools
+- ☁️ **CloudStream extensions** – Run CloudStream `.cs3` extensions on Android, iOS, macOS, Windows and Linux. Add a repository by its URL, a `cloudstreamrepo://` link or a shortcode
+- 🕸️ **Nuvio plugins** – Nuvio's scrapers find streams for the movies and shows you open from TMDB, listed together so you pick one
+- 🧱 **Stremio add-ons** – Install any add-on by its manifest URL or from the community directory
+- 🔎 **One search for all of them** – A single search bar covers SkyStream, CloudStream, Stremio and Nuvio, with a section per source and every result tagged with where it came from
 
 ### 💬 Subtitles & Content Flexibility
 - 🌍 **External Subtitles Support** – Integrated with:
@@ -151,7 +153,7 @@ SkyStream is a modern, media streaming client. It draws inspiration from the ver
 Download the latest version from the **[Releases Page](https://github.com/akashdh11/skystream/releases/latest)**.
 
 ### 🤖 Android / Android TV
-1. Download the `skystream-android-arm64-v8a-v2.5.0.apk` (recommended for most modern phones) or `skystream-android-armeabi-v7a-v2.5.0.apk` (for TV) from Releases.
+1. Download the `skystream-android-arm64-v8a-vX.Y.Z.apk` (recommended for most modern phones) or `skystream-android-armeabi-v7a-vX.Y.Z.apk` (for TV) from Releases.
 2. Open the file and tap **Install**.
    - *Note: You may need to allow "Install from Unknown Sources" in your browser settings.*
 3. Open SkyStream and install extensions via **Settings > Extensions**.
@@ -169,7 +171,7 @@ SkyStream is not on the App Store. You must **sideload** it using a computer.
 - [Sideloadly Video Guide](https://www.youtube.com/watch?v=vqTsavQc3lQ)
 
 **Steps:**
-1. Download `skystream-ios-unsigned-v2.5.0.ipa` from the [Releases Page](https://github.com/akashdh11/skystream/releases/latest).
+1. Download `skystream-ios-unsigned-vX.Y.Z.ipa` from the [Releases Page](https://github.com/akashdh11/skystream/releases/latest).
 2. Open **Impactor** or **Sideloadly** on your computer.
 3. Connect your iPhone/iPad via USB.
 4. Drag the `.ipa` file into the Sideloadly window.
@@ -179,16 +181,46 @@ SkyStream is not on the App Store. You must **sideload** it using a computer.
 8. On your device, go to **Settings > General > VPN & Device Management**, tap your email, and select **Trust**.
 9. Set up Wi-Fi sync to automatically refresh your apps in the background
 
-### 💻 Windows / macOS / Linux
-1. Download the appropriate file for your OS (`skystream-windows.exe`, `skystream-macos.dmg`, `skystream-linux.AppImage`, `skystream-linux.deb`, etc.).
+### 💻 Windows / macOS
+1. Download the file for your system from Releases:
+   - **Windows (x64):** the `SkyStream-Windows-x64-Setup` installer (`.exe`), or `skystream-windows-x64-vX.Y.Z.zip` to run without installing.
+   - **macOS:** `skystream-macos-arm64-vX.Y.Z.dmg` for Apple silicon, `skystream-macos-x64-vX.Y.Z.dmg` for Intel (a `.zip` of each is there too).
 2. Install the app.
-3. Run the application from your app launcher or terminal.
+3. Run it from your app launcher.
    - *macOS Note: If you see an “Unidentified Developer” warning, go to Settings → Privacy & Security and click Open Anyway to allow the app (one-time step).*
-   - *Linux Note: The `.deb` installs everything SkyStream needs. The AppImage and the `.tar.gz` use VLC, WebKitGTK 4.1, GTK 3 and libsecret from your system, and the AppImage tells you if one is missing. On Debian or Ubuntu:*
-     ```bash
-     sudo apt install libvlc5 vlc-plugin-base libwebkit2gtk-4.1-0 libgtk-3-0 libsecret-1-0
-     ```
-     *Make the AppImage executable before running it: `chmod +x skystream-linux-*.AppImage`.*
+
+### 🐧 Linux
+Each release has three Linux downloads, for **x64** and **arm64** (`skystream-linux-x64-…`, `skystream-linux-arm64-…`). They need glibc 2.35 or newer: Ubuntu 22.04, Debian 12, Fedora 36 or later.
+
+| File | For |
+|:-----|:----|
+| `skystream-linux-<arch>-vX.Y.Z.deb` | Debian, Ubuntu and their derivatives. Installs everything SkyStream needs. |
+| `skystream-linux-<arch>-vX.Y.Z.AppImage` | Any distribution. Runs without installing. |
+| `skystream-linux-<arch>-vX.Y.Z.tar.gz` | Any distribution, unpacked wherever you like. |
+
+**`.deb`** – apt installs SkyStream with VLC, WebKitGTK and the other libraries it needs:
+```bash
+sudo apt install ./skystream-linux-x64-vX.Y.Z.deb
+```
+
+**AppImage** – make it executable, then run it:
+```bash
+chmod +x skystream-linux-x64-vX.Y.Z.AppImage
+./skystream-linux-x64-vX.Y.Z.AppImage
+```
+*On a system without FUSE (some containers), run it with `--appimage-extract-and-run`.*
+
+**`.tar.gz`** – unpack it and run `skystream` from the folder:
+```bash
+mkdir -p ~/skystream
+tar -xzf skystream-linux-x64-vX.Y.Z.tar.gz -C ~/skystream
+~/skystream/skystream
+```
+
+The AppImage and the `.tar.gz` use VLC, WebKitGTK 4.1, GTK 3 and libsecret from your system, and the AppImage tells you if one is missing. On Debian or Ubuntu:
+```bash
+sudo apt install libvlc5 vlc-plugin-base libwebkit2gtk-4.1-0 libgtk-3-0 libsecret-1-0
+```
 
 ## 🛠️ Build from Source
 
@@ -206,7 +238,13 @@ dart run build_runner build --delete-conflicting-outputs
 flutter run
 ```
 
-The challenge browser's platform bindings (`packages/challenge_browser`) come from Pigeon and are committed, so a fresh clone builds without it. After changing `packages/challenge_browser/pigeons/messages.dart`, regenerate them from that folder with `dart run pigeon --input pigeons/messages.dart`.
+Desktop builds need a JDK 17 or newer: CloudStream extensions run on Java on macOS, Windows and Linux (see [CONTRIBUTING.md](docs/CONTRIBUTING.md)).
+
+**Pigeon** – the challenge browser's platform bindings (`packages/challenge_browser`) are generated by Pigeon and committed, so a fresh clone builds without running it. Only after changing `packages/challenge_browser/pigeons/messages.dart`, regenerate its Dart, Kotlin, Swift, C++ and GObject files together:
+```bash
+cd packages/challenge_browser
+dart run pigeon --input pigeons/messages.dart
+```
 
 ## 🤝 Contributing
 
@@ -253,9 +291,4 @@ SkyStream is a streaming client and does not host any content. All media is stre
 
 ## License
 
-SkyStream is licensed under the [GNU General Public License v3.0](LICENSE) (GPL-3.0-only). It runs
-CloudStream extensions with CloudStream's own library, which is GPL-3.0, so the app that ships it
-is too. Each package in `packages/` keeps its own licence.
-
-Until 1 October 2026 this README said MIT. Versions published before then, and the contributions
-made to them, remain available under the MIT License.
+SkyStream is licensed under the [GNU General Public License v3.0](LICENSE) (GPL-3.0-only). 

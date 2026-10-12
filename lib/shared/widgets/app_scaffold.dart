@@ -179,10 +179,10 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
   }
 
   // Intercepts D-pad LEFT only when the currently focused widget has no
-  // focusable neighbour to the left within the content area. In that case we
-  // explicitly focus the sidebar item (different FocusScope, so directional
-  // traversal can't bridge it on its own). Otherwise we let the event continue
-  // so normal in-row navigation works.
+  // focusable neighbour to the left in its own row within the content area. In
+  // that case we explicitly focus the sidebar item (different FocusScope, so
+  // directional traversal can't bridge it on its own). Otherwise we let the
+  // event continue so normal in-row navigation works.
   KeyEventResult _onContentKeyEvent(FocusNode node, KeyEvent event) {
     if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
       return KeyEventResult.ignored;
@@ -193,7 +193,9 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
     final primary = FocusManager.instance.primaryFocus;
     if (primary == null) return KeyEventResult.ignored;
 
-    final moved = primary.focusInDirection(TraversalDirection.left);
+    final moved =
+        _leftStaysInContent(primary) &&
+        primary.focusInDirection(TraversalDirection.left);
     if (moved) {
       return KeyEventResult.handled;
     }
@@ -210,6 +212,31 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
     }
     target.requestFocus();
     return KeyEventResult.handled;
+  }
+
+  // Whether Left from [node] should stay in the content: something focusable
+  // sits to its left in its own row, the band Flutter's directional search
+  // tries first. With nothing there the search takes the nearest node in any
+  // row - from the middle of Home without a provider, the header's arrows -
+  // where Left on a remote means the sidebar. A scope that holds focus itself
+  // (a page that has not focused anything yet) is left to the search.
+  static bool _leftStaysInContent(FocusNode node) {
+    final scope = node.nearestScope;
+    if (node is FocusScopeNode || scope == null) return true;
+    final rect = node.rect;
+    final row = Rect.fromLTRB(
+      -double.infinity,
+      rect.top,
+      double.infinity,
+      rect.bottom,
+    );
+    return scope.traversalDescendants.any(
+      (other) =>
+          other != node &&
+          other.rect != rect &&
+          other.rect.center.dx <= rect.left &&
+          !other.rect.intersect(row).isEmpty,
+    );
   }
 
   @override

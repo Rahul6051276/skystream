@@ -36,6 +36,7 @@
 - **More languages** – Persian, Filipino, Thai and Azerbaijani can be chosen as the audio language and in subtitle search, and SubSource now finds Chinese subtitles.
 - **Subtitles from Stremio add-ons** – The player's subtitle search also asks your Stremio subtitle add-ons, and OpenSubtitles' own Stremio add-on, so a film or an episode with an IMDb id finds subtitles with no key or account.
 - **Subtitle style in the player** – A Subtitle style page in the player's Subtitles tab sets the size, colours, background, outline, position, bold, font, text opacity and encoding, on every device including TV; Settings has the same choices. Subtitle files change at once. Subtitles inside the video change from their next line, and take bold, font, text opacity and encoding the next time the player opens (PR #133 by @1eren0).
+- **Play Stremio titles from their page** – When the add-on a title came from also brings its links, as CNCVerse Bridge does, the title's page has a Play button (Resume once started, and the next episode for a show), its episodes are laid out like a CloudStream title's and play with a tap, and the player goes on to the next episode from the same add-on. Holding an episode searches every add-on for it, as Search Stremio add-ons does.
 
 #### 🖥️ Interface
 - **Navigation bar** – A new frosted navigation bar on phones (PR #121 by @likhithkrishna1103-tech).
@@ -68,6 +69,8 @@
 - 🛠️ **Fixed: on Linux, the screen stopped going to sleep after playback** until SkyStream was closed.
 - 🛠️ **Fixed: on Linux, opening some streams, such as Internet Archive's, froze the app.**
 - 🛠️ **Fixed: on TV, the search screen's scope selector and first result ignored the D-pad.**
+- 🛠️ **Fixed: Stremio shows that an add-on publishes as "other" were treated as films** – Their add-ons search asked for the whole show instead of an episode, and Continue Watching couldn't reopen them.
+- 🛠️ **Fixed: on TV, Left could jump up to the top of a page instead of into the side navigation bar** – From a button with nothing beside it, such as Select Provider on Home, Left went to the arrows at the top. It now opens the side navigation bar.
 - 🛠️ **Fixed: on Windows, macOS and Linux, Clear cache could delete other apps' temporary files** – It now clears only SkyStream's own.
 - 🛠️ **Fixed: the Linux .deb didn't install the VLC and WebKitGTK it needs** – apt now installs them with SkyStream.
 - 🛠️ **Fixed: the Linux x64 build didn't start on Ubuntu 22.04, Debian 12 and other systems older than Ubuntu 24.04** (PR #121 by @likhithkrishna1103-tech).

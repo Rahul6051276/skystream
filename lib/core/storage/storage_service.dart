@@ -515,6 +515,11 @@ class StorageService {
       'provider': item.provider,
       'tmdbId': item.tmdbId,
       'imdbId': item.imdbId,
+      // Where a Stremio title came from, so Continue Watching can reopen it
+      // through that add-on: see `MultimediaItem.addonUrl`.
+      'source': item.source,
+      'addonUrl': item.addonUrl,
+      'addonType': item.addonType,
       'position': positionMillis,
       'duration': durationMillis,
       'lastStreamUrl': lastStreamUrl,

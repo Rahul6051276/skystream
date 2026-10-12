@@ -18,6 +18,12 @@ import 'package:riverpod_annotation/riverpod_annotation.dart'
     show ProviderListenable;
 import 'package:http/http.dart' as http;
 
+import '../../../core/addons/data/addon_own_links.dart';
+import '../../../core/addons/data/addon_playback_launcher.dart';
+import '../../../core/addons/data/addon_repository.dart';
+import '../../../core/addons/data/addon_stream_service.dart';
+import '../../../core/addons/models/addon_manifest.dart';
+import '../../../core/addons/models/addon_meta.dart' show kAddonItemSource;
 import '../../../core/domain/entity/multimedia_item.dart';
 import '../../../core/extensions/base_provider.dart';
 import '../../../core/extensions/extension_manager.dart';
@@ -290,8 +296,11 @@ Future<ResolvedPlayback> resolvePlayback({
   }
 
   final preloaded = preloadedStreams ?? const <StreamResult>[];
+  // A Stremio item's links come from the add-on it came from (Stremio direct
+  // play) - for an episode after the first too - never from a plugin.
+  final addon = _addonOf(read, item);
   final provider = _resolveProvider(read, item);
-  if (provider == null && preloaded.isEmpty) {
+  if (provider == null && addon == null && preloaded.isEmpty) {
     throw const StreamResolutionException(StreamResolutionFailure.noProvider);
   }
   if (videoUrl.isEmpty && preloaded.isEmpty) {
@@ -301,12 +310,16 @@ Future<ResolvedPlayback> resolvePlayback({
   }
 
   // A list handed in is a choice the viewer already made: the sheets put the
-  // tapped source first and have ranked the rest themselves.
+  // tapped source first and have ranked the rest themselves. An add-on's
+  // answer comes ranked too, best first, as its Play button would play it.
   final handPicked = preloaded.isNotEmpty;
+  final ranked = handPicked || addon != null;
 
   List<StreamResult> raw;
   if (handPicked) {
     raw = preloaded;
+  } else if (addon != null) {
+    raw = await _addonStreams(read, addon, item, videoUrl);
   } else {
     try {
       raw = await provider!.loadStreams(videoUrl);
@@ -330,7 +343,7 @@ Future<ResolvedPlayback> resolvePlayback({
   // drop the picked one out of it altogether.
   var didFallback = false;
   final settings = await _playerSettings(read);
-  final streams = handPicked || settings == null
+  final streams = ranked || settings == null
       ? raw
       : await _byQuality(raw, settings, (v) => didFallback = v);
   if (streams.isEmpty) {
@@ -338,7 +351,7 @@ Future<ResolvedPlayback> resolvePlayback({
   }
   onCandidates?.call(streams);
 
-  final saved = handPicked ? 0 : _savedStreamIndex(read, item, streams);
+  final saved = ranked ? 0 : _savedStreamIndex(read, item, streams);
   final index = probeCandidates <= 1
       ? saved
       : await _firstHealthyStream(
@@ -396,6 +409,9 @@ SkyStreamProvider? pluginFor(
 }
 
 SkyStreamProvider? _resolveProvider(ProviderReader read, MultimediaItem item) {
+  // A Stremio item has no plugin behind it, and the active one knows nothing
+  // of its ids: asked anyway, it answered with another title's links.
+  if (item.source == kAddonItemSource) return null;
   final active = read(activeProviderProvider);
   final wanted = item.provider;
   if (wanted != null) {
@@ -405,6 +421,54 @@ SkyStreamProvider? _resolveProvider(ProviderReader read, MultimediaItem item) {
     if (match != null) return match;
   }
   return active;
+}
+
+/// The install a Stremio item's links come from - the one whose link is
+/// playing, else the one that described it - while it is installed and on;
+/// null for anything else.
+ManagedAddon? _addonOf(ProviderReader read, MultimediaItem item) {
+  final url = item.streamAddonUrl ?? item.addonUrl;
+  if (item.source != kAddonItemSource || url == null) return null;
+  return read(addonRepositoryProvider).enabled
+      .firstWhereOrNull((a) => a.manifestUrl == url);
+}
+
+/// [videoUrl]'s links from [addon], best first: an episode by its own id and
+/// numbers, a movie by the item's, asked as the type the add-on published and
+/// the way the page's Play button asks; the top one through debrid when it is
+/// a torrent and debrid is set up.
+Future<List<StreamResult>> _addonStreams(
+  ProviderReader read,
+  ManagedAddon addon,
+  MultimediaItem item,
+  String videoUrl,
+) async {
+  final episode = item.episodes?.firstWhereOrNull((e) => e.url == videoUrl);
+  final request = AddonStreamRequest(
+    type:
+        item.addonType ??
+        (item.contentType == MultimediaContentType.movie ? 'movie' : 'series'),
+    contentId: item.url,
+    videoId: episode == null ? null : videoUrl,
+    season: episode?.season,
+    episode: episode?.episode,
+    imdbId: item.imdbId,
+    tmdbId: item.tmdbId,
+    title: item.title,
+    year: item.year,
+  );
+  // The player is open: someone is waiting, so a check that wants a click
+  // may show its sheet.
+  final links = await ownPlayableLinks(
+    read(addonStreamServiceProvider),
+    addon,
+    request,
+    personWaiting: true,
+  );
+  if (links.isEmpty) return const <StreamResult>[];
+  final top = await viaDebrid(read, links.first);
+  return read(addonStreamConverterProvider)
+      .toStreamResults(links, selected: top);
 }
 
 /// Settings can still be loading when playback starts. Silently skipping the

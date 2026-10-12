@@ -24,6 +24,17 @@ import 'package:skystream/core/services/notification_service.dart';
 
 import '../../../../shared/focus/app_focus.dart';
 
+/// A Stremio title's page, through the add-on it came from and the type it
+/// published: a bridge such as CNCVerse describes a show it published as
+/// `other` only on that type.
+AddonDetailRoute _addonPage(MultimediaItem item) => AddonDetailRoute(
+  type:
+      item.addonType ??
+      (item.contentType == MultimediaContentType.movie ? 'movie' : 'series'),
+  id: item.url,
+  addonUrl: item.addonUrl,
+);
+
 class ContinueWatchingCard extends ConsumerStatefulWidget {
   final HistoryItem historyItem;
   final double width;
@@ -240,14 +251,7 @@ class _ContinueWatchingCardState extends ConsumerState<ContinueWatchingCard> {
         // Add-on content has no plugin behind it — reopen it in the add-on
         // stack, which knows how to resolve its streams.
         if (item.source == kAddonItemSource) {
-          unawaited(
-            AddonDetailRoute(
-              type: item.contentType == MultimediaContentType.movie
-                  ? 'movie'
-                  : 'series',
-              id: item.url,
-            ).push<void>(context),
-          );
+          unawaited(_addonPage(item).push<void>(context));
           return;
         }
 
@@ -281,6 +285,12 @@ class _ContinueWatchingCardState extends ConsumerState<ContinueWatchingCard> {
                     title: Text(AppLocalizations.of(context)!.viewDetails),
                     onTap: () {
                       Navigator.pop(context);
+                      // A Stremio title's details are its add-on's page: a
+                      // plugin's page has nothing to load them from.
+                      if (item.source == kAddonItemSource) {
+                        unawaited(_addonPage(item).push<void>(context));
+                        return;
+                      }
                       unawaited(
                         DetailsRoute($extra: DetailsRouteExtra(item: item))
                             .push<void>(context),
