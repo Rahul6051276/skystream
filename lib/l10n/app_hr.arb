@@ -599,6 +599,7 @@
   "playerControls": "Player Controls",
   "showPip": "Picture-in-Picture button",
   "showResize": "Resize button",
+  "showRotate": "Gumb za rotiranje",
   "showPlaybackSpeed": "Playback speed button",
   "playerControlsSubtitle": "Show or hide player control buttons",
   "exploreAnime": "Istraži anime",
@@ -624,5 +625,14 @@
   "sourcesEmptyNoScrapers": "Nijedan scraper nije uključen. Dodajte ga u 'Nuvio Plugins'.",
   "sourcesEmptyAllFailed": "Svi scraperi nisu uspjeli. Provjerite vezu ili ih ažurirajte.",
   "sourcesEmptySomeFailed": "Nema pronađenih poveznica. Nije uspjelo {failed} od {total} scrapera.",
-  "sourcesEmptyNothingFound": "Nijedan vaš scraper nema ovaj naslov."
+  "sourcesEmptyNothingFound": "Nijedan vaš scraper nema ovaj naslov.",
+  "showStatusOngoing": "U tijeku",
+  "showStatusCompleted": "Završeno",
+  "comingSoon": "Uskoro",
+  "episodeAirsOn": "Emitira se {date}",
+  "seasonNumberAndName": "Sezona {number}: {name}",
+  "castLine": "Glumačka postava: {names}",
+  "actorRoleMain": "Glavna",
+  "actorRoleSupporting": "Sporedna",
+  "actorRoleBackground": "Epizodna"
 }

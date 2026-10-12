@@ -599,6 +599,7 @@
   "playerControls": "Player Controls",
   "showPip": "Picture-in-Picture button",
   "showResize": "Resize button",
+  "showRotate": "Tlačítko otočení",
   "showPlaybackSpeed": "Playback speed button",
   "playerControlsSubtitle": "Show or hide player control buttons",
   "exploreAnime": "Prozkoumat anime",
@@ -624,5 +625,14 @@
   "sourcesEmptyNoScrapers": "Není zapnutý žádný scraper. Přidejte ho v 'Nuvio Plugins'.",
   "sourcesEmptyAllFailed": "Všechny scrapery selhaly. Zkontrolujte připojení nebo je aktualizujte.",
   "sourcesEmptySomeFailed": "Nenalezeny žádné odkazy. Selhalo {failed} z {total} scraperů.",
-  "sourcesEmptyNothingFound": "Žádný z vašich scraperů tento titul nemá."
+  "sourcesEmptyNothingFound": "Žádný z vašich scraperů tento titul nemá.",
+  "showStatusOngoing": "Probíhá",
+  "showStatusCompleted": "Dokončeno",
+  "comingSoon": "Již brzy",
+  "episodeAirsOn": "Vysílání {date}",
+  "seasonNumberAndName": "Řada {number}: {name}",
+  "castLine": "Hrají: {names}",
+  "actorRoleMain": "Hlavní",
+  "actorRoleSupporting": "Vedlejší",
+  "actorRoleBackground": "Epizodní"
 }

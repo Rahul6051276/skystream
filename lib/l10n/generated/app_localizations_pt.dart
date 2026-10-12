@@ -1428,6 +1428,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get showResize => 'Resize button';
 
   @override
+  String get showRotate => 'Botão de rodar';
+
+  @override
   String get showPlaybackSpeed => 'Playback speed button';
 
   @override
@@ -2343,6 +2346,39 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get swipeAgainToBoost => 'Swipe up again to go past 100%';
+
+  @override
+  String get showStatusOngoing => 'Em exibição';
+
+  @override
+  String get showStatusCompleted => 'Terminado';
+
+  @override
+  String get comingSoon => 'Brevemente';
+
+  @override
+  String episodeAirsOn(String date) {
+    return 'Estreia a $date';
+  }
+
+  @override
+  String seasonNumberAndName(Object number, String name) {
+    return 'Temporada $number: $name';
+  }
+
+  @override
+  String castLine(String names) {
+    return 'Elenco: $names';
+  }
+
+  @override
+  String get actorRoleMain => 'Principal';
+
+  @override
+  String get actorRoleSupporting => 'Secundário';
+
+  @override
+  String get actorRoleBackground => 'Figurante';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -3688,6 +3724,9 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   String get showResize => 'Resize button';
 
   @override
+  String get showRotate => 'Botão de girar';
+
+  @override
   String get showPlaybackSpeed => 'Playback speed button';
 
   @override
@@ -3716,4 +3755,37 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   @override
   String get sourcesEmptyNothingFound =>
       'Nenhum dos seus scrapers tem este título.';
+
+  @override
+  String get showStatusOngoing => 'Em exibição';
+
+  @override
+  String get showStatusCompleted => 'Finalizado';
+
+  @override
+  String get comingSoon => 'Em breve';
+
+  @override
+  String episodeAirsOn(String date) {
+    return 'Estreia em $date';
+  }
+
+  @override
+  String seasonNumberAndName(Object number, String name) {
+    return 'Temporada $number: $name';
+  }
+
+  @override
+  String castLine(String names) {
+    return 'Elenco: $names';
+  }
+
+  @override
+  String get actorRoleMain => 'Principal';
+
+  @override
+  String get actorRoleSupporting => 'Coadjuvante';
+
+  @override
+  String get actorRoleBackground => 'Figurante';
 }

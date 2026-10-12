@@ -599,6 +599,7 @@
   "playerControls": "Player Controls",
   "showPip": "Picture-in-Picture button",
   "showResize": "Resize button",
+  "showRotate": "旋轉按鈕",
   "showPlaybackSpeed": "Playback speed button",
   "playerControlsSubtitle": "Show or hide player control buttons",
   "exploreAnime": "探索動畫",
@@ -624,5 +625,14 @@
   "sourcesEmptyNoScrapers": "未啟用任何抓取器。請在 'Nuvio Plugins' 中新增。",
   "sourcesEmptyAllFailed": "所有抓取器都失敗了。請檢查網路連線或更新抓取器。",
   "sourcesEmptySomeFailed": "找不到連結。{total} 個抓取器中有 {failed} 個失敗。",
-  "sourcesEmptyNothingFound": "你的抓取器都沒有此片。"
+  "sourcesEmptyNothingFound": "你的抓取器都沒有此片。",
+  "showStatusOngoing": "連載中",
+  "showStatusCompleted": "已完結",
+  "comingSoon": "即將推出",
+  "episodeAirsOn": "{date} 播出",
+  "seasonNumberAndName": "第 {number} 季：{name}",
+  "castLine": "演員：{names}",
+  "actorRoleMain": "主要",
+  "actorRoleSupporting": "配角",
+  "actorRoleBackground": "路人"
 }

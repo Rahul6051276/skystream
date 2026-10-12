@@ -83,6 +83,8 @@ class VlcPlayerControls extends ConsumerStatefulWidget {
     this.onEnterPip,
     this.fit = VlcVideoFit.contain,
     this.onFitChanged,
+    this.onRotate,
+    this.rotationHeld = false,
     this.onToggleFullscreen,
     this.isFullscreen = false,
     this.isLive = false,
@@ -147,6 +149,14 @@ class VlcPlayerControls extends ConsumerStatefulWidget {
   /// texture platforms its FittedBox is the only thing that can honour a fit,
   /// because the native setFit is a no-op there.
   final ValueChanged<VlcVideoFit>? onFitChanged;
+
+  /// Turns the handset the other way for the rest of this video. Non-null
+  /// only where the player turns the device at all: a phone or a tablet.
+  final VoidCallback? onRotate;
+
+  /// Whether a rotate press is holding the device against the video's shape,
+  /// which lights the button until the next video.
+  final bool rotationHeld;
 
   /// Desktop only; null elsewhere, where the window is already full screen.
   final VoidCallback? onToggleFullscreen;
@@ -219,11 +229,12 @@ class _VlcPlayerControlsState extends ConsumerState<VlcPlayerControls> {
   /// being overtaken by end-of-media.
   static const double _outroAdvanceFraction = 0.95;
 
-  /// The range the speed dialog offers. libVLC will go further in both
-  /// directions; below a half the audio is unintelligible and above two the
-  /// picture is what suffers, and neither is worth a rung on the slider.
+  /// The range the speed dialog offers: the engine's own
+  /// (`VlcPlayerConfig.maxPlaybackSpeed`). Below a half the audio is hard to
+  /// follow, but skimming a lecture or a recap at three or four times is what
+  /// people ask for.
   static const double _kMinSpeed = 0.25;
-  static const double _kMaxSpeed = 3.0;
+  static const double _kMaxSpeed = 4.0;
 
   /// Matches the viewer's seek duration setting.
   Duration get _seekStep => Duration(
@@ -684,6 +695,9 @@ class _VlcPlayerControlsState extends ConsumerState<VlcPlayerControls> {
   void _restoreChromeFocus() {
     if (!mounted || !_chrome.value || _chromeRoot.hasFocus) return;
     if (_skipFocus.hasFocus) return;
+    // A panel or dialog above the player owns the remote.
+    final route = ModalRoute.of(context);
+    if (route != null && !route.isCurrent) return;
     final previous = _focusBeforeHide;
     _focusBeforeHide = null;
     // Liveness has to be read from the focus tree, not from `context`: the SDK
@@ -816,7 +830,7 @@ class _VlcPlayerControlsState extends ConsumerState<VlcPlayerControls> {
   /// not silently apply to the next film.
   ///
   /// The dialog, not a list of rows. Seven [ListTile]s could only offer seven
-  /// speeds; this offers any of them to two decimal places, with the five that
+  /// speeds; this offers any of them to two decimal places, with the ones that
   /// are worth one press as chips, and the whole range reachable by a remote
   /// through the two step buttons.
   Future<void> _pickSpeed() async {
@@ -830,7 +844,7 @@ class _VlcPlayerControlsState extends ConsumerState<VlcPlayerControls> {
       step: 0.05,
       isTv: _isTv,
       format: (speed) => '${_formatSpeed(speed)}x',
-      presets: const <double>[0.5, 1.0, 1.25, 1.5, 2.0],
+      presets: const <double>[0.5, 1.0, 1.25, 1.5, 2.0, 3.0, 4.0],
       onChanged: (speed) {
         widget.controller.setPlaybackSpeed(speed);
         _showToast('${_formatSpeed(speed)}x');
@@ -1627,7 +1641,11 @@ class _VlcPlayerControlsState extends ConsumerState<VlcPlayerControls> {
                   focusNode: _playPause,
                   // Only on TV: a keyboard user wants arrows seeking from the
                   // start, which they do while the sink holds focus, not a button.
-                  autofocus: isTv,
+                  // And not when the controls are built again under a panel or
+                  // dialog - a source opened again rebuilds them - which keeps the
+                  // remote; [_claimLooseFocus] hands it over when that closes.
+                  autofocus:
+                      isTv && (ModalRoute.of(context)?.isCurrent ?? true),
                   onPressed: () {
                     _chrome.poke();
                     playing
@@ -1726,8 +1744,8 @@ class _VlcPlayerControlsState extends ConsumerState<VlcPlayerControls> {
   ///
   /// Three bands, in this order: the controls a viewer reaches for while
   /// watching (options and volume), then the rest,
-  /// then the two that change the shape of the picture rather than the
-  /// playback (resize and fullscreen), hard against the right edge.
+  /// then the ones that change the shape of the picture rather than the
+  /// playback (rotate, resize and fullscreen), hard against the right edge.
   ///
   /// The order is what a viewer reads left to right. It is *not* a survival
   /// ranking: the row is right-anchored, so a squeeze slides it off the left
@@ -1827,8 +1845,19 @@ class _VlcPlayerControlsState extends ConsumerState<VlcPlayerControls> {
           },
         ),
 
-      // Band three: the two that change the shape of the picture rather than
+      // Band three: the ones that change the shape of the picture rather than
       // the playback, last and hard against the right edge.
+      if (widget.onRotate != null && settings.showRotate)
+        PlayerIconButton(
+          icon: Icons.screen_rotation_rounded,
+          tooltip: l10n.rotate,
+          isTv: isTv,
+          highlight: widget.rotationHeld,
+          onPressed: () {
+            _chrome.poke();
+            widget.onRotate!.call();
+          },
+        ),
       if (settings.showResize)
         PlayerIconButton(
           icon: Icons.aspect_ratio_rounded,

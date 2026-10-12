@@ -109,8 +109,14 @@ class _AppSidebarState extends ConsumerState<AppSidebar> {
       if (_focusedIndex != currentFocused) {
         setState(() {
           _focusedIndex = currentFocused;
-          // If focus changed and mouse is not hovering, we are in D-pad mode!
-          if (currentFocused != null && _mouseY.value == double.infinity) {
+          // If focus changed, no mouse is hovering and focus is being shown
+          // (the last input was a key, or this is a television), we are in
+          // D-pad mode. A tap moves focus too, and a finger never hovers:
+          // without the last check every tap on a touch screen looked like
+          // a remote, and the tapped item stayed enlarged with its label.
+          if (currentFocused != null &&
+              _mouseY.value == double.infinity &&
+              FocusVisibility.visible) {
             ref
                 .read<DpadActiveNotifier>(isDpadActiveProvider.notifier)
                 .set(true);

@@ -126,20 +126,57 @@ class _PlayerStartupViewState extends State<PlayerStartupView> {
   /// autofocus alone does nothing while a row still holds focus.
   final FocusNode _retryFocus = FocusNode(debugLabel: 'player-startup-retry');
 
+  /// Back's node: where the remote goes when there is nothing else to press.
+  final FocusNode _backFocus = FocusNode(debugLabel: 'player-startup-back');
+
+  final GlobalKey<_SourceListState> _list = GlobalKey<_SourceListState>();
+
+  @override
+  void initState() {
+    super.initState();
+    FocusManager.instance.addListener(_claimParkedFocus);
+  }
+
   @override
   void didUpdateWidget(PlayerStartupView oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.isTv && widget.failed && !oldWidget.failed) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _retryFocus.requestFocus();
+        if (mounted && _onTop) _retryFocus.requestFocus();
       });
     }
   }
 
   @override
   void dispose() {
+    FocusManager.instance.removeListener(_claimParkedFocus);
     _retryFocus.dispose();
+    _backFocus.dispose();
     super.dispose();
+  }
+
+  /// Whether the player is the route on top. The card comes back over a
+  /// playing video whenever a source is opened again - a failover, a step
+  /// down in quality, the network returning - and a panel or dialog the
+  /// viewer left up over the player keeps the remote through all of it.
+  bool get _onTop => ModalRoute.of(context)?.isCurrent ?? true;
+
+  /// Takes the remote when it is left parked on the route: a panel or dialog
+  /// that was up when the card came has closed, and nothing here took focus
+  /// while it was up. Retry when every link has failed, the row being opened
+  /// when there is a list, Back otherwise.
+  void _claimParkedFocus() {
+    if (!mounted || !widget.isTv || !_onTop) return;
+    final primary = FocusManager.instance.primaryFocus;
+    if (primary is! FocusScopeNode || !_backFocus.ancestors.contains(primary)) {
+      return;
+    }
+    final target = widget.failed && widget.onRetry != null
+        ? _retryFocus
+        : _list.currentState?.openingRow ?? _backFocus;
+    if (target.context != null && target.canRequestFocus) {
+      target.requestFocus();
+    }
   }
 
   @override
@@ -205,7 +242,8 @@ class _PlayerStartupViewState extends State<PlayerStartupView> {
           isTv: widget.isTv,
           // Only while nothing else is there to land on: the list takes the
           // remote once it has rows, and Retry once everything has failed.
-          autofocus: widget.rows.isEmpty && !widget.failed,
+          autofocus: widget.rows.isEmpty && !widget.failed && _onTop,
+          focusNode: _backFocus,
           onPressed: widget.onBack,
         ),
       ],
@@ -329,7 +367,7 @@ class _PlayerStartupViewState extends State<PlayerStartupView> {
           const SizedBox(height: 18),
           CustomButton(
             isPrimary: true,
-            autofocus: widget.isTv,
+            autofocus: widget.isTv && _onTop,
             focusNode: _retryFocus,
             onPressed: widget.onRetry,
             child: Padding(
@@ -349,6 +387,7 @@ class _PlayerStartupViewState extends State<PlayerStartupView> {
           const SizedBox(height: 18),
           Flexible(
             child: _SourceList(
+              key: _list,
               rows: widget.rows,
               currentIndex: widget.currentIndex,
               isTv: widget.isTv,
@@ -418,6 +457,7 @@ class _Pill extends StatelessWidget {
 /// The rows, following the one being opened.
 class _SourceList extends StatefulWidget {
   const _SourceList({
+    super.key,
     required this.rows,
     required this.currentIndex,
     required this.isTv,
@@ -448,10 +488,11 @@ class _SourceListState extends State<_SourceList> {
       if (!mounted) return;
       _follow(animate: false);
       // The list is the first thing worth landing on, and it arrives after
-      // Back has taken the remote for the wait before it.
-      if (widget.isTv) {
-        final target = widget.currentIndex ?? 0;
-        if (target < _nodes.length) _nodes[target].requestFocus();
+      // Back has taken the remote for the wait before it. Not from under a
+      // panel or dialog left up over the player: the card claims it when
+      // that closes.
+      if (widget.isTv && (ModalRoute.of(context)?.isCurrent ?? true)) {
+        openingRow?.requestFocus();
       }
     });
   }
@@ -477,6 +518,12 @@ class _SourceListState extends State<_SourceList> {
       node.dispose();
     }
     super.dispose();
+  }
+
+  /// The row being opened, or the first when none is.
+  FocusNode? get openingRow {
+    final target = widget.currentIndex ?? 0;
+    return target < _nodes.length ? _nodes[target] : null;
   }
 
   void _syncNodes() {

@@ -599,6 +599,7 @@
   "playerControls": "Player Controls",
   "showPip": "Picture-in-Picture button",
   "showResize": "Resize button",
+  "showRotate": "Buton de rotire",
   "showPlaybackSpeed": "Playback speed button",
   "playerControlsSubtitle": "Show or hide player control buttons",
   "exploreAnime": "Explorează anime",
@@ -624,5 +625,14 @@
   "sourcesEmptyNoScrapers": "Niciun scraper activat. Adăugați unul în 'Nuvio Plugins'.",
   "sourcesEmptyAllFailed": "Toate scraperele au eșuat. Verificați conexiunea sau actualizați-le.",
   "sourcesEmptySomeFailed": "Niciun link găsit. {failed} din {total} scrapere au eșuat.",
-  "sourcesEmptyNothingFound": "Niciunul dintre scraperele dvs. nu are acest titlu."
+  "sourcesEmptyNothingFound": "Niciunul dintre scraperele dvs. nu are acest titlu.",
+  "showStatusOngoing": "În desfășurare",
+  "showStatusCompleted": "Finalizat",
+  "comingSoon": "În curând",
+  "episodeAirsOn": "Difuzare pe {date}",
+  "seasonNumberAndName": "Sezonul {number}: {name}",
+  "castLine": "Distribuție: {names}",
+  "actorRoleMain": "Principal",
+  "actorRoleSupporting": "Secundar",
+  "actorRoleBackground": "Figurant"
 }

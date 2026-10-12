@@ -46,7 +46,8 @@ const List<_Language> _languages = [
   (code: 'en', codes: ['eng'], name: 'English', aliases: []),
   (
     code: 'es',
-    codes: ['spa', 'spl'],
+    // OpenSubtitles files Latin America's and Spain's apart.
+    codes: ['spa', 'spl', 'spn'],
     name: 'Spanish',
     aliases: ['español', 'espanol', 'castellano'],
   ),
@@ -82,6 +83,7 @@ const List<_Language> _languages = [
   (code: 'km', codes: ['khm'], name: 'Khmer', aliases: []),
   (code: 'kn', codes: ['kan'], name: 'Kannada', aliases: ['ಕನ್ನಡ']),
   (code: 'ko', codes: ['kor'], name: 'Korean', aliases: ['한국어']),
+  (code: 'ku', codes: ['kur'], name: 'Kurdish', aliases: []),
   (code: 'lo', codes: ['lao'], name: 'Lao', aliases: []),
   (code: 'lt', codes: ['lit'], name: 'Lithuanian', aliases: []),
   (code: 'lv', codes: ['lav'], name: 'Latvian', aliases: ['latviešu']),
@@ -152,7 +154,8 @@ const List<_Language> _languages = [
   (code: 'vi', codes: ['vie'], name: 'Vietnamese', aliases: ['tiếng việt']),
   (
     code: 'zh',
-    codes: ['chi', 'zho'],
+    // And OpenSubtitles' own: Traditional, and Chinese beside another.
+    codes: ['chi', 'zho', 'zht', 'zhe', 'ze'],
     name: 'Chinese',
     aliases: ['中文', 'mandarin', 'cantonese'],
   ),
@@ -316,12 +319,12 @@ String? languageCodeOfTrackName(String? name) {
 
 /// The languages the player offers to choose from - the subtitle search's
 /// chips and the audio language setting - each by the name it is shown under:
-/// India's first, then the rest of the forty the subtitle search has always
-/// offered. The subtitle providers' own language maps cover the same forty.
+/// India's first, then the rest in code order. The forty the subtitle search
+/// has always offered, and Azerbaijani, Persian, Filipino and Thai. The
+/// subtitle providers ask each in their own terms (subtitle_providers.dart).
 ///
 /// Not the languages the app itself is translated into, which is another
-/// list: this one has Finnish, which the app is not in, and lacks
-/// Azerbaijani, which it is.
+/// list: this one has Finnish, which the app is not in.
 const Map<String, String> playerLanguages = {
   'English': 'en',
   'Hindi': 'hi',
@@ -335,13 +338,16 @@ const Map<String, String> playerLanguages = {
   'Punjabi': 'pa',
   'Arabic': 'ar',
   'Assamese': 'as',
+  'Azerbaijani': 'az',
   'Belarusian': 'be',
   'Bulgarian': 'bg',
   'Czech': 'cs',
   'German': 'de',
   'Greek': 'el',
   'Spanish': 'es',
+  'Persian': 'fa',
   'Finnish': 'fi',
+  'Filipino': 'fil',
   'French': 'fr',
   'Hebrew': 'he',
   'Croatian': 'hr',
@@ -358,6 +364,7 @@ const Map<String, String> playerLanguages = {
   'Romanian': 'ro',
   'Russian': 'ru',
   'Swedish': 'sv',
+  'Thai': 'th',
   'Turkish': 'tr',
   'Ukrainian': 'uk',
   'Urdu': 'ur',

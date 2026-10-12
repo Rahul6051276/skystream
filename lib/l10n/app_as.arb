@@ -599,6 +599,7 @@
   "playerControls": "Player Controls",
   "showPip": "Picture-in-Picture button",
   "showResize": "Resize button",
+  "showRotate": "ঘূৰোৱা বুটাম",
   "showPlaybackSpeed": "Playback speed button",
   "playerControlsSubtitle": "Show or hide player control buttons",
   "exploreAnime": "এনিমে অন্বেষণ কৰক",
@@ -624,5 +625,14 @@
   "sourcesEmptyNoScrapers": "কোনো স্ক্ৰেপাৰ সক্ৰিয় নহয়। 'Nuvio Plugins'ত এটা যোগ কৰক।",
   "sourcesEmptyAllFailed": "সকলো স্ক্ৰেপাৰ বিফল হ'ল। সংযোগ পৰীক্ষা কৰক বা স্ক্ৰেপাৰ আপডেট কৰক।",
   "sourcesEmptySomeFailed": "কোনো লিংক পোৱা নগ'ল। {total} টাৰ ভিতৰত {failed} টা স্ক্ৰেপাৰ বিফল হ'ল।",
-  "sourcesEmptyNothingFound": "আপোনাৰ কোনো স্ক্ৰেপাৰৰ ওচৰত এই শিৰোনাম নাই।"
+  "sourcesEmptyNothingFound": "আপোনাৰ কোনো স্ক্ৰেপাৰৰ ওচৰত এই শিৰোনাম নাই।",
+  "showStatusOngoing": "চলি আছে",
+  "showStatusCompleted": "সম্পূৰ্ণ",
+  "comingSoon": "সোনকালে আহি আছে",
+  "episodeAirsOn": "{date}ত প্ৰচাৰ হ'ব",
+  "seasonNumberAndName": "ছিজন {number}: {name}",
+  "castLine": "অভিনয়: {names}",
+  "actorRoleMain": "মুখ্য",
+  "actorRoleSupporting": "সহায়ক",
+  "actorRoleBackground": "পটভূমি"
 }

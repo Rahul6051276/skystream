@@ -1430,6 +1430,9 @@ class AppLocalizationsHu extends AppLocalizations {
   String get showResize => 'Resize button';
 
   @override
+  String get showRotate => 'Forgatás gomb';
+
+  @override
   String get showPlaybackSpeed => 'Playback speed button';
 
   @override
@@ -2345,4 +2348,37 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get swipeAgainToBoost => 'Swipe up again to go past 100%';
+
+  @override
+  String get showStatusOngoing => 'Folyamatban';
+
+  @override
+  String get showStatusCompleted => 'Befejezett';
+
+  @override
+  String get comingSoon => 'Hamarosan';
+
+  @override
+  String episodeAirsOn(String date) {
+    return 'Adás: $date';
+  }
+
+  @override
+  String seasonNumberAndName(Object number, String name) {
+    return '$number. évad: $name';
+  }
+
+  @override
+  String castLine(String names) {
+    return 'Szereplők: $names';
+  }
+
+  @override
+  String get actorRoleMain => 'Főszerep';
+
+  @override
+  String get actorRoleSupporting => 'Mellékszerep';
+
+  @override
+  String get actorRoleBackground => 'Statiszta';
 }

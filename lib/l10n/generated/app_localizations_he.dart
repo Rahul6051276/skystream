@@ -1416,6 +1416,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get showResize => 'Resize button';
 
   @override
+  String get showRotate => 'כפתור סיבוב';
+
+  @override
   String get showPlaybackSpeed => 'Playback speed button';
 
   @override
@@ -2331,4 +2334,37 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get swipeAgainToBoost => 'Swipe up again to go past 100%';
+
+  @override
+  String get showStatusOngoing => 'משודרת';
+
+  @override
+  String get showStatusCompleted => 'הסתיימה';
+
+  @override
+  String get comingSoon => 'בקרוב';
+
+  @override
+  String episodeAirsOn(String date) {
+    return 'משודר ב-$date';
+  }
+
+  @override
+  String seasonNumberAndName(Object number, String name) {
+    return 'עונה $number: $name';
+  }
+
+  @override
+  String castLine(String names) {
+    return 'שחקנים: $names';
+  }
+
+  @override
+  String get actorRoleMain => 'ראשי';
+
+  @override
+  String get actorRoleSupporting => 'משנה';
+
+  @override
+  String get actorRoleBackground => 'ניצב';
 }

@@ -1442,6 +1442,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get showResize => 'Resize button';
 
   @override
+  String get showRotate => 'زر التدوير';
+
+  @override
   String get showPlaybackSpeed => 'Playback speed button';
 
   @override
@@ -2358,6 +2361,39 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get swipeAgainToBoost => 'Swipe up again to go past 100%';
+
+  @override
+  String get showStatusOngoing => 'مستمر';
+
+  @override
+  String get showStatusCompleted => 'مكتمل';
+
+  @override
+  String get comingSoon => 'قريبًا';
+
+  @override
+  String episodeAirsOn(String date) {
+    return 'يُعرض في $date';
+  }
+
+  @override
+  String seasonNumberAndName(Object number, String name) {
+    return 'الموسم $number: $name';
+  }
+
+  @override
+  String castLine(String names) {
+    return 'طاقم التمثيل: $names';
+  }
+
+  @override
+  String get actorRoleMain => 'رئيسي';
+
+  @override
+  String get actorRoleSupporting => 'ثانوي';
+
+  @override
+  String get actorRoleBackground => 'هامشي';
 }
 
 /// The translations for Arabic (`ar_apc`).
@@ -3701,6 +3737,9 @@ class AppLocalizationsArApc extends AppLocalizationsAr {
   String get showResize => 'Resize button';
 
   @override
+  String get showRotate => 'زر التدوير';
+
+  @override
   String get showPlaybackSpeed => 'Playback speed button';
 
   @override
@@ -3728,4 +3767,37 @@ class AppLocalizationsArApc extends AppLocalizationsAr {
 
   @override
   String get sourcesEmptyNothingFound => 'ولا وحدة من أدواتك عندها هالعنوان.';
+
+  @override
+  String get showStatusOngoing => 'مستمر';
+
+  @override
+  String get showStatusCompleted => 'مكتمل';
+
+  @override
+  String get comingSoon => 'قريبًا';
+
+  @override
+  String episodeAirsOn(String date) {
+    return 'بيتعرض بـ $date';
+  }
+
+  @override
+  String seasonNumberAndName(Object number, String name) {
+    return 'الموسم $number: $name';
+  }
+
+  @override
+  String castLine(String names) {
+    return 'الممثلين: $names';
+  }
+
+  @override
+  String get actorRoleMain => 'رئيسي';
+
+  @override
+  String get actorRoleSupporting => 'ثانوي';
+
+  @override
+  String get actorRoleBackground => 'هامشي';
 }

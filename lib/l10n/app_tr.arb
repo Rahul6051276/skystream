@@ -599,6 +599,7 @@
   "playerControls": "Player Controls",
   "showPip": "Picture-in-Picture button",
   "showResize": "Resize button",
+  "showRotate": "Döndürme düğmesi",
   "showPlaybackSpeed": "Playback speed button",
   "playerControlsSubtitle": "Show or hide player control buttons",
   "exploreAnime": "Anime keşfet",
@@ -624,5 +625,14 @@
   "sourcesEmptyNoScrapers": "Etkin scraper yok. 'Nuvio Plugins' içinden ekleyin.",
   "sourcesEmptyAllFailed": "Tüm scraper'lar başarısız oldu. Bağlantınızı kontrol edin veya scraper'ları güncelleyin.",
   "sourcesEmptySomeFailed": "Bağlantı bulunamadı. {total} scraper'dan {failed} tanesi başarısız oldu.",
-  "sourcesEmptyNothingFound": "Scraper'larınızın hiçbirinde bu başlık yok."
+  "sourcesEmptyNothingFound": "Scraper'larınızın hiçbirinde bu başlık yok.",
+  "showStatusOngoing": "Devam ediyor",
+  "showStatusCompleted": "Tamamlandı",
+  "comingSoon": "Yakında",
+  "episodeAirsOn": "{date} tarihinde yayında",
+  "seasonNumberAndName": "Sezon {number}: {name}",
+  "castLine": "Oyuncular: {names}",
+  "actorRoleMain": "Başrol",
+  "actorRoleSupporting": "Yardımcı rol",
+  "actorRoleBackground": "Figüran"
 }

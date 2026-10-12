@@ -46,6 +46,7 @@ import 'package:skystream/l10n/generated/app_localizations.dart';
 import 'core/providers/locale_provider.dart';
 import 'core/network/clearance/clearance.dart';
 import 'core/network/clearance/clearance_bridge.dart';
+import 'core/network/clearance/clearance_images.dart';
 import 'core/config/tmdb_config.dart';
 import 'core/providers/device_info_provider.dart';
 import 'shared/focus/app_focus.dart';
@@ -81,6 +82,10 @@ void main() async {
   PaintingBinding.instance.imageCache
     ..maximumSize = 200
     ..maximumSizeBytes = 50 * 1024 * 1024; // 50 MB
+
+  // Before any image is asked for: posters from a site behind a bot check go
+  // with the clearance its plugin earned - see clearance_images.dart.
+  installClearanceImageCache();
 
   // Repaint rainbow for the flicker hunt - see player_debug_flags.dart. A
   // compile-time constant, so a normal build carries no trace of it.

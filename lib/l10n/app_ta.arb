@@ -599,6 +599,7 @@
   "playerControls": "Player Controls",
   "showPip": "Picture-in-Picture button",
   "showResize": "Resize button",
+  "showRotate": "சுழற்றும் பொத்தான்",
   "showPlaybackSpeed": "Playback speed button",
   "playerControlsSubtitle": "Show or hide player control buttons",
   "exploreAnime": "அனிமேவை உலாவுக",
@@ -624,5 +625,14 @@
   "sourcesEmptyNoScrapers": "எந்த ஸ்கிரேப்பரும் இயக்கப்படவில்லை. 'Nuvio Plugins' இல் ஒன்றைச் சேர்க்கவும்.",
   "sourcesEmptyAllFailed": "அனைத்து ஸ்கிரேப்பர்களும் தோல்வியடைந்தன. இணைப்பைச் சரிபார்க்கவும் அல்லது ஸ்கிரேப்பர்களைப் புதுப்பிக்கவும்.",
   "sourcesEmptySomeFailed": "இணைப்புகள் எதுவும் இல்லை. {total} இல் {failed} ஸ்கிரேப்பர்கள் தோல்வியடைந்தன.",
-  "sourcesEmptyNothingFound": "உங்கள் ஸ்கிரேப்பர்கள் எதிலும் இந்தத் தலைப்பு இல்லை."
+  "sourcesEmptyNothingFound": "உங்கள் ஸ்கிரேப்பர்கள் எதிலும் இந்தத் தலைப்பு இல்லை.",
+  "showStatusOngoing": "ஒளிபரப்பில்",
+  "showStatusCompleted": "முடிந்தது",
+  "comingSoon": "விரைவில்",
+  "episodeAirsOn": "{date} அன்று ஒளிபரப்பு",
+  "seasonNumberAndName": "சீசன் {number}: {name}",
+  "castLine": "நடிகர்கள்: {names}",
+  "actorRoleMain": "முதன்மை",
+  "actorRoleSupporting": "துணை",
+  "actorRoleBackground": "பின்னணி"
 }

@@ -1415,6 +1415,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get showResize => 'Resize button';
 
   @override
+  String get showRotate => 'Nút xoay';
+
+  @override
   String get showPlaybackSpeed => 'Playback speed button';
 
   @override
@@ -2330,4 +2333,37 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get swipeAgainToBoost => 'Swipe up again to go past 100%';
+
+  @override
+  String get showStatusOngoing => 'Đang phát sóng';
+
+  @override
+  String get showStatusCompleted => 'Đã hoàn thành';
+
+  @override
+  String get comingSoon => 'Sắp ra mắt';
+
+  @override
+  String episodeAirsOn(String date) {
+    return 'Phát sóng $date';
+  }
+
+  @override
+  String seasonNumberAndName(Object number, String name) {
+    return 'Phần $number: $name';
+  }
+
+  @override
+  String castLine(String names) {
+    return 'Diễn viên: $names';
+  }
+
+  @override
+  String get actorRoleMain => 'Chính';
+
+  @override
+  String get actorRoleSupporting => 'Phụ';
+
+  @override
+  String get actorRoleBackground => 'Quần chúng';
 }

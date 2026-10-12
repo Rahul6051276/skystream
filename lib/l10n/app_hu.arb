@@ -599,6 +599,7 @@
   "playerControls": "Player Controls",
   "showPip": "Picture-in-Picture button",
   "showResize": "Resize button",
+  "showRotate": "Forgatás gomb",
   "showPlaybackSpeed": "Playback speed button",
   "playerControlsSubtitle": "Show or hide player control buttons",
   "exploreAnime": "Anime felfedezése",
@@ -624,5 +625,14 @@
   "sourcesEmptyNoScrapers": "Nincs engedélyezett scraper. Adjon hozzá egyet a 'Nuvio Plugins' alatt.",
   "sourcesEmptyAllFailed": "Minden scraper hibázott. Ellenőrizze a kapcsolatot, vagy frissítse őket.",
   "sourcesEmptySomeFailed": "Nem található link. {total} scraperből {failed} hibázott.",
-  "sourcesEmptyNothingFound": "Egyik scraperében sincs meg ez a cím."
+  "sourcesEmptyNothingFound": "Egyik scraperében sincs meg ez a cím.",
+  "showStatusOngoing": "Folyamatban",
+  "showStatusCompleted": "Befejezett",
+  "comingSoon": "Hamarosan",
+  "episodeAirsOn": "Adás: {date}",
+  "seasonNumberAndName": "{number}. évad: {name}",
+  "castLine": "Szereplők: {names}",
+  "actorRoleMain": "Főszerep",
+  "actorRoleSupporting": "Mellékszerep",
+  "actorRoleBackground": "Statiszta"
 }

@@ -599,6 +599,7 @@
   "playerControls": "Player Controls",
   "showPip": "Picture-in-Picture button",
   "showResize": "Resize button",
+  "showRotate": "Rotationsknapp",
   "showPlaybackSpeed": "Playback speed button",
   "playerControlsSubtitle": "Show or hide player control buttons",
   "exploreAnime": "Utforska anime",
@@ -624,5 +625,14 @@
   "sourcesEmptyNoScrapers": "Inga scrapers aktiverade. Lägg till en i 'Nuvio Plugins'.",
   "sourcesEmptyAllFailed": "Alla scrapers misslyckades. Kontrollera anslutningen eller uppdatera dem.",
   "sourcesEmptySomeFailed": "Inga länkar hittades. {failed} av {total} scrapers misslyckades.",
-  "sourcesEmptyNothingFound": "Ingen av dina scrapers har den här titeln."
+  "sourcesEmptyNothingFound": "Ingen av dina scrapers har den här titeln.",
+  "showStatusOngoing": "Pågående",
+  "showStatusCompleted": "Avslutad",
+  "comingSoon": "Kommer snart",
+  "episodeAirsOn": "Sänds {date}",
+  "seasonNumberAndName": "Säsong {number}: {name}",
+  "castLine": "Medverkande: {names}",
+  "actorRoleMain": "Huvudroll",
+  "actorRoleSupporting": "Biroll",
+  "actorRoleBackground": "Statist"
 }

@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:math';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import 'browser.dart';
@@ -92,9 +94,13 @@ Future<ChallengeSheetResult> showChallengeSheet(
   final result = shape == _Shape.phone
       ? await showModalBottomSheet<ChallengeSheetResult>(
           context: context,
+          // Over the app's own bars, as a dialog is: the app's navigator, not the one of the tab that asked.
+          useRootNavigator: true,
           isScrollControlled: true,
           useSafeArea: true,
           showDragHandle: true,
+          // The page scrolls under the finger; the sheet moves by its handle alone.
+          enableDrag: false,
           builder: sheet,
         )
       : await showDialog<ChallengeSheetResult>(context: context, builder: sheet);
@@ -213,8 +219,10 @@ class _ChallengeSheetState extends State<_ChallengeSheet> {
     // A phone's sheet and the dialog are narrow: Close and Done stay in sight and the rest go under a
     // menu, as a column of buttons would leave the page no room.
     final compact = widget.shape == _Shape.phone || widget.shape == _Shape.dialog && !_fullScreen;
+    final phone = widget.shape == _Shape.phone;
     final content = Padding(
-      padding: EdgeInsets.fromLTRB(16, widget.shape == _Shape.phone ? 0 : 16, 16, 16),
+      // A phone's sheet reaches the screen's bottom edge: its buttons stay above the system's navigation bar.
+      padding: EdgeInsets.fromLTRB(16, phone ? 0 : 16, 16, 16 + (phone ? MediaQuery.paddingOf(context).bottom : 0)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -260,6 +268,8 @@ class _ChallengeSheetState extends State<_ChallengeSheet> {
               browser: widget.browser,
               autofocus: widget.shape != _Shape.phone,
               dpadInTabOrder: true,
+              // The page's drags are its own, ahead of a sheet or anything else around it: it scrolls.
+              gestureRecognizers: {Factory<OneSequenceGestureRecognizer>(EagerGestureRecognizer.new)},
             ),
           ),
           if (!tv) ...[
@@ -289,10 +299,14 @@ class _ChallengeSheetState extends State<_ChallengeSheet> {
     );
     final height = MediaQuery.sizeOf(context).height;
     return switch (widget.shape) {
-      // Six tenths of the screen, but room enough for a check on a small phone.
-      _Shape.phone => SizedBox(
-        height: _fullScreen ? height : (height * 0.6).clamp(min(_phoneMinHeight, height * 0.9), height),
-        child: content,
+      // Six tenths of the screen, but room enough for a check on a small phone; above the keyboard, which
+      // a sign-in's fields bring up, with the page taking what room is left.
+      _Shape.phone => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+        child: SizedBox(
+          height: _fullScreen ? height : (height * 0.6).clamp(min(_phoneMinHeight, height * 0.9), height),
+          child: content,
+        ),
       ),
       _Shape.dialog when !_fullScreen => Dialog(child: SizedBox(width: 480, height: 560, child: content)),
       _ => Dialog.fullscreen(child: content),

@@ -1403,6 +1403,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get showResize => 'Resize button';
 
   @override
+  String get showRotate => '回転ボタン';
+
+  @override
   String get showPlaybackSpeed => 'Playback speed button';
 
   @override
@@ -2317,4 +2320,37 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get swipeAgainToBoost => 'Swipe up again to go past 100%';
+
+  @override
+  String get showStatusOngoing => '放送中';
+
+  @override
+  String get showStatusCompleted => '完結';
+
+  @override
+  String get comingSoon => '近日公開';
+
+  @override
+  String episodeAirsOn(String date) {
+    return '$date放送';
+  }
+
+  @override
+  String seasonNumberAndName(Object number, String name) {
+    return 'シーズン$number：$name';
+  }
+
+  @override
+  String castLine(String names) {
+    return 'キャスト：$names';
+  }
+
+  @override
+  String get actorRoleMain => 'メイン';
+
+  @override
+  String get actorRoleSupporting => 'サブ';
+
+  @override
+  String get actorRoleBackground => 'モブ';
 }

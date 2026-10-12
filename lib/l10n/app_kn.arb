@@ -422,6 +422,7 @@
   "playerControls": "Player Controls",
   "showPip": "Picture-in-Picture button",
   "showResize": "Resize button",
+  "showRotate": "ತಿರುಗಿಸುವ ಬಟನ್",
   "showPlaybackSpeed": "Playback speed button",
   "showVolume": "ಧ್ವನಿಮಟ್ಟದ ಬಟನ್",
   "showEpisodeNavigation": "ಹಿಂದಿನ / ಮುಂದಿನ ಸಂಚಿಕೆಯ ಬಟನ್‌ಗಳು",
@@ -636,5 +637,14 @@
   "cloudStreamSupport": "ಬೆಂಬಲ",
   "cloudStreamSupportFailed": "{name} ಸಂದೇಶಗಳನ್ನು ತೆರೆಯಲಾಗಲಿಲ್ಲ: {error}",
   "cloudStreamSettingsStopped": "{name} ಸೆಟ್ಟಿಂಗ್‌ಗಳು ನಿಂತುಹೋದವು: {error}",
-  "swipeAgainToBoost": "100% ಮೀರಿ ಹೋಗಲು ಮತ್ತೆ ಮೇಲಕ್ಕೆ ಸ್ವೈಪ್ ಮಾಡಿ"
+  "swipeAgainToBoost": "100% ಮೀರಿ ಹೋಗಲು ಮತ್ತೆ ಮೇಲಕ್ಕೆ ಸ್ವೈಪ್ ಮಾಡಿ",
+  "showStatusOngoing": "ಪ್ರಸಾರವಾಗುತ್ತಿದೆ",
+  "showStatusCompleted": "ಪೂರ್ಣಗೊಂಡಿದೆ",
+  "comingSoon": "ಶೀಘ್ರದಲ್ಲೇ ಬರಲಿದೆ",
+  "episodeAirsOn": "{date} ರಂದು ಪ್ರಸಾರ",
+  "seasonNumberAndName": "ಸೀಸನ್ {number}: {name}",
+  "castLine": "ಪಾತ್ರವರ್ಗ: {names}",
+  "actorRoleMain": "ಮುಖ್ಯ",
+  "actorRoleSupporting": "ಪೋಷಕ",
+  "actorRoleBackground": "ಗೌಣ"
 }

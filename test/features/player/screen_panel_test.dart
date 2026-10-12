@@ -20,9 +20,12 @@ import 'package:skystream/features/player/presentation/vlc/panel/player_panel.da
 import 'package:skystream/features/player/presentation/vlc/panel/player_panel_row.dart';
 import 'package:skystream/features/player/presentation/vlc/panel/player_sources_tab.dart';
 import 'package:skystream/features/player/presentation/vlc/panel/player_tracks_tab.dart';
+import 'package:skystream/features/player/presentation/vlc/player_startup_view.dart';
+import 'package:skystream/features/player/presentation/vlc/vlc_player_controls.dart';
 import 'package:skystream/l10n/generated/app_localizations.dart';
 
 import 'fake_vlc_engine.dart';
+
 import 'package:skystream/features/player/domain/network_buffer.dart';
 import 'package:skystream/features/settings/presentation/player_settings_provider.dart';
 
@@ -796,6 +799,139 @@ void main() {
 
       expect(find.byType(PlayerPanel), findsOneWidget, reason: 'still up');
       expect(selectedRows(tester), <String>['Beta']);
+
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
+  /// Whether whatever holds focus is one of the player's controls - a bar
+  /// button or the key sink, not the route scope behind them.
+  bool focusOnControls() =>
+      FocusManager.instance.primaryFocus?.context
+          ?.findAncestorWidgetOfExactType<VlcPlayerControls>() !=
+      null;
+
+  /// Whether whatever holds focus is one of the opening card's rows or
+  /// buttons.
+  bool focusOnStartup() =>
+      FocusManager.instance.primaryFocus?.context
+          ?.findAncestorWidgetOfExactType<PlayerStartupView>() !=
+      null;
+
+  /// The source the panel was opened over dies after it had played, so the
+  /// screen opens it again where it was - as it does after a rendition
+  /// step-down or a network drop. The opening card is back under the panel.
+  Future<void> reopenUnderPanel(WidgetTester tester) async {
+    await pumpPlayer(tester, preloadedStreams: streams);
+    await sendFirstFrame(tester);
+    final l10n = await english();
+    await openFromBar(tester, l10n.sources);
+    expect(focusInPanel(), isTrue);
+
+    await sendEvent(tester, snapshot(state: 'error', position: 1600));
+    await settle(tester);
+    expect(find.byType(PlayerStartupView), findsOneWidget);
+    expect(find.byType(PlayerPanel), findsOneWidget, reason: 'still up');
+  }
+
+  testWidgets(
+    'a reopen under an open panel leaves the remote in the panel',
+    variant: texturePlatform,
+    (tester) async {
+      await reopenUnderPanel(tester);
+      expect(
+        focusInPanel(),
+        isTrue,
+        reason:
+            'the opening card\'s list takes the remote when it comes up on a '
+            'television - under a panel that is still up, which leaves the '
+            'viewer pressing keys at a list they cannot see',
+      );
+
+      // The picture comes back, and with it the controls, whose play/pause a
+      // television lands on.
+      await sendEvent(tester, snapshot(position: 9000));
+      await settle(tester);
+      expect(find.byType(VlcPlayerControls), findsOneWidget);
+      expect(
+        focusInPanel(),
+        isTrue,
+        reason: 'nor the play/pause behind the panel',
+      );
+
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
+  testWidgets(
+    'Back from a panel left up through a reopen hands the remote to the '
+    'controls',
+    variant: texturePlatform,
+    (tester) async {
+      await reopenUnderPanel(tester);
+      await sendEvent(tester, snapshot(position: 9000));
+      await settle(tester);
+
+      await sendBack(tester);
+      await settle(tester);
+      expect(find.byType(PlayerPanel), findsNothing);
+      expect(
+        focusOnControls(),
+        isTrue,
+        reason:
+            'the button that opened the panel was rebuilt with the controls, '
+            'so focus has nothing to go back to; left on the route scope, a '
+            'remote has nothing to move from',
+      );
+
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
+  testWidgets(
+    'Back from the panel while the source is opening again hands the remote '
+    'to the opening card',
+    variant: texturePlatform,
+    (tester) async {
+      await reopenUnderPanel(tester);
+
+      await sendBack(tester);
+      await settle(tester);
+      expect(find.byType(PlayerPanel), findsNothing);
+      expect(focusOnStartup(), isTrue);
+
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
+  testWidgets(
+    'a failure under an open panel leaves the remote in the panel, and Back '
+    'hands it to Retry',
+    variant: texturePlatform,
+    (tester) async {
+      await pumpPlayer(tester, preloadedStreams: streams);
+      await sendFirstFrame(tester);
+      final l10n = await english();
+      await openFromBar(tester, l10n.sources);
+
+      // Every candidate dies; the screen fails with the panel still up.
+      for (final position in <int>[1600, 1700, 1800, 1900, 2000, 2100]) {
+        await sendEvent(tester, snapshot(state: 'error', position: position));
+        await settle(tester);
+      }
+      expect(find.text(l10n.retry), findsWidgets);
+      expect(find.byType(PlayerPanel), findsOneWidget, reason: 'still up');
+      expect(focusInPanel(), isTrue, reason: 'Retry waits for the panel');
+
+      await sendBack(tester);
+      await settle(tester);
+      expect(find.byType(PlayerPanel), findsNothing);
+      final focused = FocusManager.instance.primaryFocus?.context;
+      expect(
+        focused?.findAncestorWidgetOfExactType<PlayerStartupView>(),
+        isNotNull,
+        reason: 'Retry is the one thing left to press',
+      );
 
       await tester.pumpWidget(const SizedBox());
     },

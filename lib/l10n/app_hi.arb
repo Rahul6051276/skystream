@@ -422,6 +422,7 @@
   "playerControls": "Player Controls",
   "showPip": "Picture-in-Picture button",
   "showResize": "Resize button",
+  "showRotate": "घुमाने का बटन",
   "showPlaybackSpeed": "Playback speed button",
   "showVolume": "आवाज़ का बटन",
   "showEpisodeNavigation": "पिछले / अगले एपिसोड के बटन",
@@ -636,5 +637,14 @@
   "cloudStreamSupport": "समर्थन",
   "cloudStreamSupportFailed": "{name} के संदेश नहीं खुल सके: {error}",
   "cloudStreamSettingsStopped": "{name} की सेटिंग्स बंद हो गईं: {error}",
-  "swipeAgainToBoost": "100% से आगे ले जाने के लिए फिर से ऊपर स्वाइप करें"
+  "swipeAgainToBoost": "100% से आगे ले जाने के लिए फिर से ऊपर स्वाइप करें",
+  "showStatusOngoing": "जारी",
+  "showStatusCompleted": "पूर्ण",
+  "comingSoon": "जल्द आ रहा है",
+  "episodeAirsOn": "{date} को प्रसारण",
+  "seasonNumberAndName": "सीजन {number}: {name}",
+  "castLine": "कलाकार: {names}",
+  "actorRoleMain": "मुख्य",
+  "actorRoleSupporting": "सहायक",
+  "actorRoleBackground": "गौण"
 }

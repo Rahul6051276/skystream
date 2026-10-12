@@ -290,9 +290,6 @@ class RepositoryService {
   Future<List<ExtensionPlugin>> getRepoPlugins(ExtensionRepository repo) async {
     final List<ExtensionPlugin> allPlugins = <ExtensionPlugin>[];
 
-    // Add plugins directly embedded in the repository manifest (Enterprise V2)
-    allPlugins.addAll(repo.plugins);
-
     for (final pluginListUrl in repo.pluginLists) {
       try {
         final normalizedUrl = _normalizeUrl(pluginListUrl);

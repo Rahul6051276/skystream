@@ -60,11 +60,13 @@ void main() {
   });
 
   test('letters and digits of any script stay words', () {
+    // 進 as Simplified Chinese writes it, 进: search folds a Traditional
+    // character to its Simplified one in a title and a query alike.
     expect(searchWords('Shingeki no Kyojin (進撃の巨人)'), [
       'shingeki',
       'no',
       'kyojin',
-      '進撃の巨人',
+      '进撃の巨人',
     ]);
     expect(searchWords('Pokémon 2000'), ['pokemon', '2000']);
     expect(

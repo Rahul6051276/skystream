@@ -174,6 +174,7 @@ class _DetailsScreenState extends ConsumerState<DetailsScreen> {
                             label: item.title,
                           ) ??
                           '',
+                      httpHeaders: artworkHeaders(item),
                       fit: BoxFit.cover,
                       alignment: Alignment.topCenter,
                       // Bound decoded bitmap; plugin backdrops are often at
@@ -618,6 +619,7 @@ class _DetailsScreenState extends ConsumerState<DetailsScreen> {
                               label: item.title,
                             ) ??
                             '',
+                        httpHeaders: artworkHeaders(item),
                         width: 100,
                         height: 150,
                         fit: BoxFit.cover,
@@ -638,6 +640,7 @@ class _DetailsScreenState extends ConsumerState<DetailsScreen> {
                           child: item.logoUrl != null
                               ? CachedNetworkImage(
                                   imageUrl: item.logoUrl!,
+                                  httpHeaders: artworkHeaders(item),
                                   height: 50,
                                   fit: BoxFit.contain,
                                   alignment: Alignment.centerLeft,
@@ -668,12 +671,16 @@ class _DetailsScreenState extends ConsumerState<DetailsScreen> {
                 ],
               ),
               const SizedBox(height: 24),
-              DetailsActionButtons(
-                item: widget.item,
-                details: details,
-                itemUrl: widget.item.url,
-              ),
-              if (item.nextAiring != null) ...[
+              // Nothing to play yet: CloudStream hides Play there too.
+              if (item.comingSoon)
+                const ComingSoonLabel()
+              else
+                DetailsActionButtons(
+                  item: widget.item,
+                  details: details,
+                  itemUrl: widget.item.url,
+                ),
+              if (nextAiringAhead(item)) ...[
                 const SizedBox(height: 16),
                 NextAiringWidget(nextAiring: item.nextAiring!),
               ],
@@ -692,6 +699,10 @@ class _DetailsScreenState extends ConsumerState<DetailsScreen> {
                   height: 1.5,
                 ),
               ),
+              if (item.tags != null && item.tags!.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                TagsRow(tags: item.tags!),
+              ],
               const SizedBox(height: 32),
               if (detailsState is AsyncLoading)
                 Column(

@@ -1441,6 +1441,9 @@ class AppLocalizationsPa extends AppLocalizations {
   String get showResize => 'Resize button';
 
   @override
+  String get showRotate => 'ਘੁਮਾਉਣ ਵਾਲਾ ਬਟਨ';
+
+  @override
   String get showPlaybackSpeed => 'Playback speed button';
 
   @override
@@ -2357,4 +2360,37 @@ class AppLocalizationsPa extends AppLocalizations {
 
   @override
   String get swipeAgainToBoost => 'Swipe up again to go past 100%';
+
+  @override
+  String get showStatusOngoing => 'ਜਾਰੀ ਹੈ';
+
+  @override
+  String get showStatusCompleted => 'ਪੂਰਾ';
+
+  @override
+  String get comingSoon => 'ਜਲਦੀ ਆ ਰਿਹਾ ਹੈ';
+
+  @override
+  String episodeAirsOn(String date) {
+    return '$date ਨੂੰ ਪ੍ਰਸਾਰਣ';
+  }
+
+  @override
+  String seasonNumberAndName(Object number, String name) {
+    return 'ਸੀਜ਼ਨ $number: $name';
+  }
+
+  @override
+  String castLine(String names) {
+    return 'ਕਲਾਕਾਰ: $names';
+  }
+
+  @override
+  String get actorRoleMain => 'ਮੁੱਖ';
+
+  @override
+  String get actorRoleSupporting => 'ਸਹਾਇਕ';
+
+  @override
+  String get actorRoleBackground => 'ਗੌਣ';
 }

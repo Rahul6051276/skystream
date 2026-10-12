@@ -113,6 +113,14 @@ PlayerFormFactor playerFormFactorOf(DeviceProfile? profile) {
   return profile.isTablet ? PlayerFormFactor.tablet : PlayerFormFactor.phone;
 }
 
+/// Whether the player offers its rotate button: where it turns the device at
+/// all ([PlayerFormFactor.pinsOrientation]) and the OS obeys the request
+/// ([DeviceProfile.obeysOrientationRequests]). Elsewhere a press would do
+/// nothing, so there is no button.
+bool playerCanRotate(DeviceProfile? profile) =>
+    playerFormFactorOf(profile).pinsOrientation &&
+    (profile?.obeysOrientationRequests ?? false);
+
 /// A transport command issued from the picture-in-picture window's buttons.
 ///
 /// Delivered by `MainActivity`'s broadcast receiver while the app is in PiP
@@ -178,6 +186,16 @@ class PlayerPlatformService {
   /// own choice, since nothing else in the app pins. iOS goes back to it on
   /// the way out when the device can't say which way up it is.
   Orientation? _orientationBeforePin;
+
+  /// The orientation the viewer's rotate press asked for, or null while the
+  /// video decides.
+  ///
+  /// Held until [followVideo] or [restoreOrientation]: the rest of this video
+  /// is the viewer's, the next one turns the device to its own shape again.
+  Orientation? _chosenByViewer;
+
+  /// Whether a rotate press is holding the device against the video's shape.
+  bool get viewerChoseOrientation => _chosenByViewer != null;
 
   /// Returns whether the window actually shrank. False covers pre-Oreo, a
   /// device that refuses, and a user who has turned PiP off for this app,
@@ -289,8 +307,8 @@ class PlayerPlatformService {
   /// Points the device the way the video is shaped, once the video's shape has
   /// stopped changing.
   ///
-  /// The only thing that decides orientation in the player; there is no manual
-  /// rotate control.
+  /// The player's own decision, until the viewer presses rotate: from then to
+  /// the end of that video [flipOrientation] has the say.
   ///
   /// [renderedSize] must be `VlcPlayerValue.displayVideoSize` and never
   /// `VlcPlayerValue.videoSize`. `videoSize` is the elementary stream's
@@ -319,7 +337,10 @@ class PlayerPlatformService {
   }) {
     // Full screen mode can turn a phone into a `tv` between two ticks, and a
     // candidate armed a moment earlier must not go on to rotate a television.
-    if (!form.pinsOrientation) return _dropShapeCandidate();
+    // An automatic turn that undoes the viewer's press reads as a bug.
+    if (!form.pinsOrientation || _chosenByViewer != null) {
+      return _dropShapeCandidate();
+    }
     if (renderedSize == null ||
         renderedSize.width <= 0 ||
         renderedSize.height <= 0) {
@@ -351,6 +372,47 @@ class PlayerPlatformService {
     });
   }
 
+  /// Turns the device the other way for the rest of this video: the rotate
+  /// button.
+  ///
+  /// At once, with no settle: the viewer asked. The way it is now is the
+  /// viewer's last press if there was one, since a second press can land
+  /// before the window has finished turning from the first, and otherwise the
+  /// window's own shape, which is what the viewer is looking at.
+  ///
+  /// Holds against [applyVideoOrientation] until [followVideo] or
+  /// [restoreOrientation]. Like every pin here it is a pair, so the handset
+  /// can still be turned end for end.
+  void flipOrientation(PlayerFormFactor form) {
+    if (!form.pinsOrientation) return;
+    _dropShapeCandidate();
+    final now =
+        _chosenByViewer ??
+        _viewOrientation() ??
+        _pinnedOrientation ??
+        Orientation.portrait;
+    final wanted = now == Orientation.landscape
+        ? Orientation.portrait
+        : Orientation.landscape;
+    _orientationBeforePin ??= _viewOrientation();
+    _chosenByViewer = wanted;
+    _pinnedOrientation = wanted;
+    unawaited(
+      SystemChrome.setPreferredOrientations(
+        wanted == Orientation.landscape ? _landscape : _portrait,
+      ),
+    );
+  }
+
+  /// Hands the say back to the video, for the next one the screen opens.
+  ///
+  /// The device stays where the viewer put it until that video's shape has
+  /// settled, as it does between two episodes with an automatic pin.
+  void followVideo() {
+    _dropShapeCandidate();
+    _chosenByViewer = null;
+  }
+
   /// Forgets the shape being waited on and stops the clock waiting on it.
   ///
   /// Never touches [_pinnedOrientation]: what has already been asked of the OS
@@ -377,6 +439,7 @@ class PlayerPlatformService {
   /// would rotate the device under whatever came next.
   void restoreOrientation() {
     _dropShapeCandidate();
+    _chosenByViewer = null;
     if (_pinnedOrientation == null) return;
     _pinnedOrientation = null;
     final before = _orientationBeforePin;

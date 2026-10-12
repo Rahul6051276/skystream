@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:cs3_engine/cs3_engine.dart';
 import 'package:dio/dio.dart';
+import 'package:html_unescape/html_unescape.dart';
 import 'package:flutter/foundation.dart';
 
 import '../domain/entity/multimedia_item.dart';
@@ -136,54 +137,165 @@ class CloudStreamProvider extends SkyStreamProvider {
   @override
   Future<MultimediaItem> getDetails(String url) async {
     final result = await _call((e) => e.load(name, url, plugin: _pluginPath), kind: 'load');
+    return details(result, url: url, packageName: packageName, providerName: name);
+  }
+
+  static final _unescape = HtmlUnescape();
+
+  /// DateTime's range, 100,000,000 days either side of 1970. A date beyond it (nanoseconds where milliseconds were
+  /// meant) is dropped rather than failing the whole page.
+  static const _maxDateMs = 8640000000000000;
+
+  /// What the engine's `load` answer becomes: everything CloudStream's details page shows that SkyStream has a place
+  /// for. Pure, so each field is tested without an engine. [url] is the one asked for, not the one the extension
+  /// echoes: history and the details screen are keyed by it.
+  @visibleForTesting
+  static MultimediaItem details(
+    Map<String, dynamic> result, {
+    required String url,
+    required String packageName,
+    required String providerName,
+    DateTime? now,
+  }) {
     final type = _contentType(result['type'] as String?);
     final title = result['name'] as String? ?? '';
     final episodes = <Episode>[];
 
-    final dataUrl = result['dataUrl'] as String?;
+    final dataUrl = (result['dataUrl'] as String?)?.trim();
     final magnet = result['magnet'] as String? ?? result['torrent'] as String?;
-    if (dataUrl != null) {
+    // A blank data URL is a film not out yet (CloudStream marks it coming soon): nothing to play.
+    if (dataUrl != null && dataUrl.isNotEmpty) {
       episodes.add(Episode(name: title, url: _token(dataUrl), season: 1, episode: 1));
     } else if (magnet != null) {
       episodes.add(Episode(name: title, url: _token(magnet, torrent: true), season: 1, episode: 1));
     } else {
       final raw = _list(result['episodes']);
       for (var i = 0; i < raw.length; i++) {
-        final ep = raw[i];
-        final number = (ep['episode'] as num?)?.toInt() ?? i + 1;
-        episodes.add(
-          Episode(
-            name: (ep['name'] as String?)?.trim().isNotEmpty == true ? ep['name'] as String : 'Episode $number',
-            url: _token(ep['data'] as String),
-            season: (ep['season'] as num?)?.toInt() ?? 1,
-            episode: number,
-            description: ep['description'] as String?,
-            posterUrl: ep['posterUrl'] as String?,
-            dubStatus: switch ((ep['dub'] as String?)?.toLowerCase()) {
-              'dubbed' => DubStatus.dubbed,
-              'subbed' => DubStatus.subbed,
-              _ => DubStatus.none,
-            },
-          ),
-        );
+        episodes.add(_episode(raw[i], i));
       }
     }
 
+    final poster = _text(result['posterUrl']);
+    final background = _text(result['backgroundPosterUrl']);
+    final syncIds = <String, String>{
+      for (final entry in ((result['syncIds'] as Map?) ?? const {}).entries) '${entry.key}': '${entry.value}',
+    };
+    final imdb = syncIds['imdb'];
+
     return MultimediaItem(
       title: title,
-      // The URL we were asked for, not the one the plugin echoes: history and the details
-      // screen are keyed by it.
       url: url,
-      posterUrl: result['posterUrl'] as String? ?? '',
-      bannerUrl: result['backgroundPosterUrl'] as String?,
-      description: result['plot'] as String?,
+      // CloudStream shows the background when there is no poster.
+      posterUrl: poster ?? background ?? '',
+      bannerUrl: background,
+      logoUrl: _text(result['logoUrl']),
+      description: _decode(result['plot'] as String?),
       contentType: type,
       provider: packageName,
+      headers: _stringMap(result['posterHeaders']),
       year: (result['year'] as num?)?.toInt(),
+      score: (result['score'] as num?)?.toDouble(),
       duration: (result['duration'] as num?)?.toInt(),
+      status: switch (result['showStatus']) {
+        'Completed' => ShowStatus.completed,
+        'Ongoing' => ShowStatus.ongoing,
+        _ => ShowStatus.unknown,
+      },
       tags: [...?(result['tags'] as List?)?.whereType<String>()],
+      contentRating: _text(result['contentRating']),
+      cast: [for (final actor in _list(result['actors'])) _actor(actor)],
+      trailers: [
+        for (final trailer in _list(result['trailers']))
+          if (_text(trailer['url']) != null) _trailer(trailer),
+      ],
+      // CloudStream lists a title's recommendations from its own extension only, and a tap opens them with it.
+      recommendations: [
+        for (final rec in _list(result['recommendations']))
+          if (rec['apiName'] == providerName && rec['url'] is String) _searchItem(rec, provider: packageName),
+      ],
+      syncData: syncIds.isEmpty ? null : syncIds,
+      tmdbId: int.tryParse(syncIds['tmdb'] ?? ''),
+      imdbId: imdb != null && RegExp(r'^tt\d{6,}$').hasMatch(imdb) ? imdb : null,
+      nextAiring: _nextAiring(result['nextAiring'], now ?? DateTime.now()),
+      comingSoon: result['comingSoon'] == true,
+      seasonNames: [
+        for (final season in _list(result['seasonNames']))
+          if (season['season'] is num) SeasonName.fromJson(season),
+      ],
       episodes: episodes,
     );
+  }
+
+  static Episode _episode(Map<String, dynamic> ep, int index) {
+    final number = (ep['episode'] as num?)?.toInt() ?? index + 1;
+    final name = (ep['name'] as String?)?.trim();
+    final millis = (ep['date'] as num?)?.toInt();
+    final airedAt =
+        millis == null || millis.abs() > _maxDateMs ? null : DateTime.fromMillisecondsSinceEpoch(millis, isUtc: true);
+    return Episode(
+      name: name != null && name.isNotEmpty ? _unescape.convert(name) : 'Episode $number',
+      url: _token(ep['data'] as String),
+      season: (ep['season'] as num?)?.toInt() ?? 1,
+      episode: number,
+      description: _decode(ep['description'] as String?),
+      posterUrl: ep['posterUrl'] as String?,
+      rating: (ep['score'] as num?)?.toDouble(),
+      runtime: (ep['runTime'] as num?)?.toInt(),
+      airedAt: airedAt,
+      // The text the player's episode list shows.
+      airDate: airedAt?.toIso8601String().substring(0, 10),
+      dubStatus: switch ((ep['dub'] as String?)?.toLowerCase()) {
+        'dubbed' => DubStatus.dubbed,
+        'subbed' => DubStatus.subbed,
+        _ => DubStatus.none,
+      },
+    );
+  }
+
+  static Actor _actor(Map<String, dynamic> actor) {
+    final role = _text(actor['role']);
+    final voice = actor['voiceActor'] is Map ? Map<String, dynamic>.from(actor['voiceActor'] as Map) : null;
+    return Actor(
+      name: actor['name'] as String? ?? '',
+      image: _text(actor['image']),
+      role: role ?? _text(actor['roleString']),
+      roleIsEnum: role != null,
+      voiceActor: voice == null ? null : Actor(name: voice['name'] as String? ?? '', image: _text(voice['image'])),
+    );
+  }
+
+  static Trailer _trailer(Map<String, dynamic> trailer) {
+    final referer = _text(trailer['referer']);
+    final headers = _stringMap(trailer['headers']) ?? <String, String>{};
+    if (referer != null && !headers.keys.any((k) => k.toLowerCase() == 'referer')) headers['Referer'] = referer;
+    return Trailer(
+      url: (trailer['url'] as String).trim(),
+      raw: trailer['raw'] == true,
+      referer: referer,
+      headers: headers.isEmpty ? null : headers,
+    );
+  }
+
+  /// Seconds, as CloudStream sends it; gone once it has passed, as CloudStream hides it.
+  static NextAiring? _nextAiring(Object? value, DateTime now) {
+    if (value is! Map) return null;
+    final unixTime = (value['unixTime'] as num?)?.toInt();
+    final episode = (value['episode'] as num?)?.toInt();
+    if (unixTime == null || episode == null || unixTime.abs() > _maxDateMs ~/ 1000) return null;
+    if (unixTime * 1000 <= now.millisecondsSinceEpoch) return null;
+    return NextAiring(episode: episode, unixTime: unixTime, season: (value['season'] as num?)?.toInt());
+  }
+
+  static String? _text(Object? value) {
+    final text = value is String ? value.trim() : null;
+    return text == null || text.isEmpty ? null : text;
+  }
+
+  static String? _decode(String? text) => text == null ? null : _unescape.convert(text);
+
+  static Map<String, String>? _stringMap(Object? value) {
+    if (value is! Map || value.isEmpty) return null;
+    return {for (final entry in value.entries) '${entry.key}': '${entry.value}'};
   }
 
   @override
@@ -211,12 +323,15 @@ class CloudStreamProvider extends SkyStreamProvider {
     ];
   }
 
-  MultimediaItem _item(Map<String, dynamic> item, {bool stampProvider = true}) => MultimediaItem(
+  MultimediaItem _item(Map<String, dynamic> item, {bool stampProvider = true}) =>
+      _searchItem(item, provider: stampProvider ? packageName : null);
+
+  static MultimediaItem _searchItem(Map<String, dynamic> item, {String? provider}) => MultimediaItem(
     title: item['name'] as String? ?? '',
     url: item['url'] as String,
     posterUrl: item['posterUrl'] as String? ?? '',
     contentType: _contentType(item['type'] as String?),
-    provider: stampProvider ? packageName : null,
+    provider: provider,
     year: (item['year'] as num?)?.toInt(),
     headers: (item['posterHeaders'] as Map?)?.cast<String, String>(),
   );

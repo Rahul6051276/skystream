@@ -1441,6 +1441,9 @@ class AppLocalizationsMl extends AppLocalizations {
   String get showResize => 'Resize button';
 
   @override
+  String get showRotate => 'തിരിക്കാനുള്ള ബട്ടൺ';
+
+  @override
   String get showPlaybackSpeed => 'Playback speed button';
 
   @override
@@ -2357,4 +2360,37 @@ class AppLocalizationsMl extends AppLocalizations {
 
   @override
   String get swipeAgainToBoost => 'Swipe up again to go past 100%';
+
+  @override
+  String get showStatusOngoing => 'തുടരുന്നു';
+
+  @override
+  String get showStatusCompleted => 'പൂർത്തിയായി';
+
+  @override
+  String get comingSoon => 'ഉടൻ വരുന്നു';
+
+  @override
+  String episodeAirsOn(String date) {
+    return '$date-ന് സംപ്രേഷണം';
+  }
+
+  @override
+  String seasonNumberAndName(Object number, String name) {
+    return 'സീസൺ $number: $name';
+  }
+
+  @override
+  String castLine(String names) {
+    return 'അഭിനേതാക്കൾ: $names';
+  }
+
+  @override
+  String get actorRoleMain => 'പ്രധാന';
+
+  @override
+  String get actorRoleSupporting => 'സഹ';
+
+  @override
+  String get actorRoleBackground => 'പശ്ചാത്തല';
 }

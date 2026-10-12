@@ -166,6 +166,53 @@ void main() {
     await drainToasts(tester);
   });
 
+  testWidgets('the source picker opens over the app\'s bottom bar from a tab', (
+    WidgetTester tester,
+  ) async {
+    container = ProviderContainer(
+      overrides: [activeProviderProvider.overrideWithValue(_OneLinkProvider())],
+    );
+    addTearDown(container.dispose);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          navigatorKey: rootNavigatorKey,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          // A tab of its own under the app's bottom bar, as the app's tabs are.
+          home: Scaffold(
+            extendBody: true,
+            body: Navigator(
+              onGenerateRoute: (_) => MaterialPageRoute<void>(
+                builder: (_) => const Scaffold(body: Text('title')),
+              ),
+            ),
+            bottomNavigationBar: const ColoredBox(
+              key: Key('bottom bar'),
+              color: Color(0xFF2196F3),
+              child: SizedBox(height: 64, width: double.infinity),
+            ),
+          ),
+        ),
+      ),
+    );
+    unawaited(
+      container
+          .read(downloadLauncherProvider)
+          .launch(tester.element(find.text('title')), _item),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(BottomSheet), findsOneWidget);
+    expect(find.text(_stream.source), findsOneWidget);
+    expect(
+      find.byKey(const Key('bottom bar')).hitTestable(),
+      findsNothing,
+      reason: 'under the picker and its barrier',
+    );
+  });
+
   testWidgets(
     "Download on a game's title: as the game's call ends, only its own dialog goes, never the game's screen",
     (WidgetTester tester) async {
@@ -259,6 +306,14 @@ class _StubDownloadService extends DownloadService {
 
 String _text(Talker logger) =>
     logger.history.map((TalkerData e) => e.generateTextMessage()).join('\n');
+
+/// A provider whose links call answers one link.
+class _OneLinkProvider extends _GameProvider {
+  _OneLinkProvider() : super(() {});
+
+  @override
+  Future<List<StreamResult>> loadStreams(String url) async => const [_stream];
+}
 
 /// A game's provider: its links call puts the game's screen up ([shown]) and ends with it still there.
 class _GameProvider implements SkyStreamProvider {

@@ -86,7 +86,8 @@ void main() {
   // the steps are as far apart in wall time and so further apart in the
   // media: at 3x a report trails the clock three times as far, which is not a
   // step back to take, nor a sign that the clock has run ahead to hold it for.
-  for (final speed in const [1.0, 1.5, 2.0, 2.5, 3.0]) {
+  // Up to the dialog's 4x.
+  for (final speed in const [1.0, 1.5, 2.0, 2.5, 3.0, 4.0]) {
     testWidgets('hls-android staircase at ${speed}x: the clock never steps '
         'back and never stands still', (tester) async {
       final seen = await _staircase(tester, speed);

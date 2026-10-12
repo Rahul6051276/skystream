@@ -191,19 +191,21 @@ class PlayerSettings {
   /// visible. Options stays available for sources, tracks, and episodes.
   /// The episode toggle controls only the previous/next transport buttons.
   ///
-  /// There is no rotate toggle: the manual rotate button went away when
-  /// orientation started following the video's own shape, and a stored
-  /// boolean for a button nobody draws is a preference that changes nothing.
-  /// Old installs may still hold a `player_show_rotate` key in the Hive
-  /// settings box; it is never read, and nothing enumerates that box, so it
-  /// costs one unread boolean and needs no migration. The same goes for
-  /// `player_readahead` and the five `player_hdr_*` / `player_tone_map` /
-  /// `player_inverse_tone_map` keys: libVLC 3 has neither a read-ahead-in-
-  /// seconds control nor mpv's tone mapping, so the settings that wrote them
-  /// went away with the engine that could have honoured them.
+  /// The rotate toggle is back with the rotate button (2026-10-11), on the
+  /// `player_show_rotate` key it had before the button went away, so an old
+  /// install that hid it keeps it hidden.
+  ///
+  /// Old installs may still hold `player_readahead` and the five
+  /// `player_hdr_*` / `player_tone_map` / `player_inverse_tone_map` keys in the
+  /// Hive settings box; they are never read, and nothing enumerates that box,
+  /// so they cost one unread value each and need no migration. libVLC 3 has
+  /// neither a read-ahead-in-seconds control nor mpv's tone mapping, so the
+  /// settings that wrote them went away with the engine that could have
+  /// honoured them.
   final bool showVolume;
   final bool showPip;
   final bool showResize;
+  final bool showRotate;
   final bool showPlaybackSpeed;
   final bool showEpisodes;
 
@@ -246,6 +248,7 @@ class PlayerSettings {
     this.showVolume = true,
     this.showPip = true,
     this.showResize = true,
+    this.showRotate = true,
     this.showPlaybackSpeed = true,
     this.showEpisodes = true,
     this.osUsername = '',
@@ -288,6 +291,7 @@ class PlayerSettings {
     bool? showVolume,
     bool? showPip,
     bool? showResize,
+    bool? showRotate,
     bool? showPlaybackSpeed,
     bool? showEpisodes,
     String? osUsername,
@@ -333,6 +337,7 @@ class PlayerSettings {
       showVolume: showVolume ?? this.showVolume,
       showPip: showPip ?? this.showPip,
       showResize: showResize ?? this.showResize,
+      showRotate: showRotate ?? this.showRotate,
       showPlaybackSpeed: showPlaybackSpeed ?? this.showPlaybackSpeed,
       showEpisodes: showEpisodes ?? this.showEpisodes,
       osUsername: osUsername ?? this.osUsername,
@@ -513,6 +518,12 @@ class PlayerSettingsNotifier extends _$PlayerSettingsNotifier {
           defaultValue: true,
         ) ??
         true;
+    final showRotate =
+        storage.getPlayerSetting<bool>(
+          'player_show_rotate',
+          defaultValue: true,
+        ) ??
+        true;
     final showPlaybackSpeed =
         storage.getPlayerSetting<bool>(
           'player_show_playback_speed',
@@ -567,6 +578,7 @@ class PlayerSettingsNotifier extends _$PlayerSettingsNotifier {
       showVolume: showVolume,
       showPip: showPip,
       showResize: showResize,
+      showRotate: showRotate,
       showPlaybackSpeed: showPlaybackSpeed,
       showEpisodes: showEpisodes,
       osUsername: osUser,
@@ -714,6 +726,11 @@ class PlayerSettingsNotifier extends _$PlayerSettingsNotifier {
   Future<void> setShowResize(bool val) async {
     await _repository.setPlayerSetting('player_show_resize', val);
     _update((PlayerSettings c) => c.copyWith(showResize: val));
+  }
+
+  Future<void> setShowRotate(bool val) async {
+    await _repository.setPlayerSetting('player_show_rotate', val);
+    _update((PlayerSettings c) => c.copyWith(showRotate: val));
   }
 
   Future<void> setShowPlaybackSpeed(bool val) async {

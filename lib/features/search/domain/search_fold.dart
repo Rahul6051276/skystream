@@ -16,7 +16,9 @@ import 'search_fold_table.dart';
 ///   joined title words ("Grey’s", "Spider‐Man", "WALL·E");
 /// - Hindi and Punjabi words with or without a nukta, with a chandrabindu or
 ///   an anusvara, and with a nasal and virama or an anusvara, written one
-///   way; and old Malayalam chillu letters as the atomic ones.
+///   way; and old Malayalam chillu letters as the atomic ones;
+/// - Traditional Chinese characters as the Simplified ones (庆 for 慶), except
+///   one that is Simplified as well (乾, 著).
 ///
 /// The marks a word is made of (Indic vowel signs and viramas, Thai vowels,
 /// kana voicing marks) stay in it. Text that is all ASCII is only lowercased.
@@ -40,6 +42,23 @@ List<String> nasalSpellingsForSearch(String text) {
       ),
   ];
 }
+
+/// [codePoint] as Simplified Chinese writes it, when it is a Traditional
+/// character with a Simplified one (see [searchHanFolds]); otherwise itself.
+int _simplified(int codePoint) {
+  final ideograph =
+      (codePoint >= 0x3400 && codePoint <= 0x9FFF) ||
+      (codePoint >= 0xF900 && codePoint <= 0xFAFF) ||
+      codePoint >= 0x20000;
+  return ideograph ? (_hanFolds[codePoint] ?? codePoint) : codePoint;
+}
+
+/// [searchHanFolds] as code points, read the first time a title has a Chinese
+/// character in it.
+final Map<int, int> _hanFolds = () {
+  final pairs = searchHanFolds.runes.toList();
+  return {for (var i = 0; i + 1 < pairs.length; i += 2) pairs[i]: pairs[i + 1]};
+}();
 
 /// [text] folded for search, with each Devanagari nasal and virama before a
 /// consonant as an anusvara when [nasalsAsAnusvara], or as written.
@@ -66,7 +85,7 @@ String _fold(String text, {required bool nasalsAsAnusvara}) {
       if (folded != null) {
         out.write(folded);
       } else {
-        out.writeCharCode(codePoint);
+        out.writeCharCode(_simplified(codePoint));
       }
       if (codePoint == 0x200C || codePoint == 0x200D) zeroWidthJoiner = true;
       if ((codePoint >= 0x0900 && codePoint <= 0x097F) ||

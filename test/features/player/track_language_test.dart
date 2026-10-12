@@ -146,9 +146,21 @@ void main() {
     });
   });
 
+  // The OpenSubtitles add-on's own codes (2026-10-11): its Traditional and
+  // bilingual Chinese, Spain's Spanish and Kurdish were read as no language,
+  // so the viewer's language never picked them.
+  group('the OpenSubtitles add-on\'s own codes', () {
+    test('are read as the language they are in', () {
+      expect(languageCodeOf('zht'), 'zh');
+      expect(languageCodeOf('zhe'), 'zh');
+      expect(languageCodeOf('spn'), 'es');
+      expect(languageCodeOf('kur'), 'ku');
+    });
+  });
+
   group('the languages the player offers', () {
-    test('are the forty the subtitle search has always offered, India\'s '
-        'first', () {
+    test('are the forty the subtitle search has always offered and four '
+        'more, India\'s first', () {
       expect(playerLanguages.values.take(10), <String>[
         'en',
         'hi',
@@ -161,8 +173,16 @@ void main() {
         'ml',
         'pa',
       ]);
-      expect(playerLanguages, hasLength(40));
-      expect(playerLanguages.values.toSet(), hasLength(40));
+      expect(playerLanguages, hasLength(44));
+      expect(playerLanguages.values.toSet(), hasLength(44));
+    });
+
+    // Persian, Filipino and Thai were offered for audio before the list was
+    // shared; Azerbaijani is a language the app itself is in.
+    test('offer Persian, Filipino, Thai and Azerbaijani', () {
+      for (final code in <String>['fa', 'fil', 'th', 'az']) {
+        expect(playerLanguages.values, contains(code));
+      }
     });
 
     test('keep the rest of the forty the subtitle search has always '

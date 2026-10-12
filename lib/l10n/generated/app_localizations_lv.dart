@@ -1432,6 +1432,9 @@ class AppLocalizationsLv extends AppLocalizations {
   String get showResize => 'Resize button';
 
   @override
+  String get showRotate => 'Pagriešanas poga';
+
+  @override
   String get showPlaybackSpeed => 'Playback speed button';
 
   @override
@@ -2348,4 +2351,37 @@ class AppLocalizationsLv extends AppLocalizations {
 
   @override
   String get swipeAgainToBoost => 'Swipe up again to go past 100%';
+
+  @override
+  String get showStatusOngoing => 'Turpinās';
+
+  @override
+  String get showStatusCompleted => 'Pabeigts';
+
+  @override
+  String get comingSoon => 'Drīzumā';
+
+  @override
+  String episodeAirsOn(String date) {
+    return 'Pārraide $date';
+  }
+
+  @override
+  String seasonNumberAndName(Object number, String name) {
+    return '$number. sezona: $name';
+  }
+
+  @override
+  String castLine(String names) {
+    return 'Lomās: $names';
+  }
+
+  @override
+  String get actorRoleMain => 'Galvenā';
+
+  @override
+  String get actorRoleSupporting => 'Otrā plāna';
+
+  @override
+  String get actorRoleBackground => 'Epizodiskā';
 }

@@ -1429,6 +1429,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get showResize => 'Resize button';
 
   @override
+  String get showRotate => 'Rotationsknapp';
+
+  @override
   String get showPlaybackSpeed => 'Playback speed button';
 
   @override
@@ -2344,4 +2347,37 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get swipeAgainToBoost => 'Swipe up again to go past 100%';
+
+  @override
+  String get showStatusOngoing => 'Pågående';
+
+  @override
+  String get showStatusCompleted => 'Avslutad';
+
+  @override
+  String get comingSoon => 'Kommer snart';
+
+  @override
+  String episodeAirsOn(String date) {
+    return 'Sänds $date';
+  }
+
+  @override
+  String seasonNumberAndName(Object number, String name) {
+    return 'Säsong $number: $name';
+  }
+
+  @override
+  String castLine(String names) {
+    return 'Medverkande: $names';
+  }
+
+  @override
+  String get actorRoleMain => 'Huvudroll';
+
+  @override
+  String get actorRoleSupporting => 'Biroll';
+
+  @override
+  String get actorRoleBackground => 'Statist';
 }

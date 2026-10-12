@@ -374,6 +374,9 @@ class PlaybackLauncher {
 
     showModalBottomSheet<void>(
       context: context,
+      // Over the app's bottom bar, as its dialogs are: the app's navigator,
+      // not that of a tab the launch came from (Home's Continue Watching).
+      useRootNavigator: true,
       isScrollControlled: true,
       builder: (ctx) => SafeArea(
         child: ConstrainedBox(

@@ -1442,6 +1442,9 @@ class AppLocalizationsUr extends AppLocalizations {
   String get showResize => 'Resize button';
 
   @override
+  String get showRotate => 'روٹیٹ بٹن';
+
+  @override
   String get showPlaybackSpeed => 'Playback speed button';
 
   @override
@@ -2357,4 +2360,37 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get swipeAgainToBoost => 'Swipe up again to go past 100%';
+
+  @override
+  String get showStatusOngoing => 'جاری';
+
+  @override
+  String get showStatusCompleted => 'مکمل';
+
+  @override
+  String get comingSoon => 'جلد آ رہا ہے';
+
+  @override
+  String episodeAirsOn(String date) {
+    return '$date کو نشر';
+  }
+
+  @override
+  String seasonNumberAndName(Object number, String name) {
+    return 'سیزن $number: $name';
+  }
+
+  @override
+  String castLine(String names) {
+    return 'کاسٹ: $names';
+  }
+
+  @override
+  String get actorRoleMain => 'مرکزی';
+
+  @override
+  String get actorRoleSupporting => 'معاون';
+
+  @override
+  String get actorRoleBackground => 'ضمنی';
 }

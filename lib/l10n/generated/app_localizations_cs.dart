@@ -1435,6 +1435,9 @@ class AppLocalizationsCs extends AppLocalizations {
   String get showResize => 'Resize button';
 
   @override
+  String get showRotate => 'Tlačítko otočení';
+
+  @override
   String get showPlaybackSpeed => 'Playback speed button';
 
   @override
@@ -2350,4 +2353,37 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get swipeAgainToBoost => 'Swipe up again to go past 100%';
+
+  @override
+  String get showStatusOngoing => 'Probíhá';
+
+  @override
+  String get showStatusCompleted => 'Dokončeno';
+
+  @override
+  String get comingSoon => 'Již brzy';
+
+  @override
+  String episodeAirsOn(String date) {
+    return 'Vysílání $date';
+  }
+
+  @override
+  String seasonNumberAndName(Object number, String name) {
+    return 'Řada $number: $name';
+  }
+
+  @override
+  String castLine(String names) {
+    return 'Hrají: $names';
+  }
+
+  @override
+  String get actorRoleMain => 'Hlavní';
+
+  @override
+  String get actorRoleSupporting => 'Vedlejší';
+
+  @override
+  String get actorRoleBackground => 'Epizodní';
 }

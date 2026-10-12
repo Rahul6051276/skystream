@@ -599,6 +599,7 @@
   "playerControls": "Player Controls",
   "showPip": "Picture-in-Picture button",
   "showResize": "Resize button",
+  "showRotate": "כפתור סיבוב",
   "showPlaybackSpeed": "Playback speed button",
   "playerControlsSubtitle": "Show or hide player control buttons",
   "exploreAnime": "גילוי אנימה",
@@ -624,5 +625,14 @@
   "sourcesEmptyNoScrapers": "אין סקרייפרים פעילים. הוסף אחד ב-'Nuvio Plugins'.",
   "sourcesEmptyAllFailed": "כל הסקרייפרים נכשלו. בדוק את החיבור או עדכן את הסקרייפרים.",
   "sourcesEmptySomeFailed": "לא נמצאו קישורים. {failed} מתוך {total} סקרייפרים נכשלו.",
-  "sourcesEmptyNothingFound": "לאף אחד מהסקרייפרים שלך אין את הכותר הזה."
+  "sourcesEmptyNothingFound": "לאף אחד מהסקרייפרים שלך אין את הכותר הזה.",
+  "showStatusOngoing": "משודרת",
+  "showStatusCompleted": "הסתיימה",
+  "comingSoon": "בקרוב",
+  "episodeAirsOn": "משודר ב-{date}",
+  "seasonNumberAndName": "עונה {number}: {name}",
+  "castLine": "שחקנים: {names}",
+  "actorRoleMain": "ראשי",
+  "actorRoleSupporting": "משנה",
+  "actorRoleBackground": "ניצב"
 }

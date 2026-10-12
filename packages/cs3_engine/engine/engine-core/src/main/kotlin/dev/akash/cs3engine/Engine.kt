@@ -59,6 +59,10 @@ import java.util.concurrent.TimeoutException
  * loadLinks's answer: links, subtitles, completed, error, and fullScreen: true when it ended with a full-screen window of
  * its extension, one that showed during it and still shows or went within [QUIET_END_MS] (a game: the app ends a Play
  * with no links quietly; a check the extension went on from doesn't count).
+ * load's answer: the title (name, url, type, plot, posterUrl, backgroundPosterUrl, year, tags, duration), its score
+ * (out of 10; none under 0.1), contentRating, logoUrl, posterHeaders, comingSoon, actors, trailers, recommendations
+ * and syncIds (mal, anilist, kitsu, simkl, imdb, tmdb); a show's showStatus, nextAiring (unixTime in seconds) and
+ * seasonNames; and per episode its score, date (epoch ms) and runTime (minutes).
  *
  * Events go out unprompted, through [HostHooks.event], as they happen:
  *
@@ -140,6 +144,8 @@ class Engine(
     init {
         // CloudStream's app does this at startup; the library's YouTube extractors need it.
         NewPipeDownloader.install()
+        // CloudStream's app names its id keys at startup too; extensions' addMalId and the like write under them.
+        Mappers.nameSyncKeys()
         // Bot checks: the app's browser clears them, and its clearances go with every request on
         // CloudStream's shared clients.
         HostHooks.webView = RemoteWebViewHost

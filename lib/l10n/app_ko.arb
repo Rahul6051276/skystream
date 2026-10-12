@@ -599,6 +599,7 @@
   "playerControls": "Player Controls",
   "showPip": "Picture-in-Picture button",
   "showResize": "Resize button",
+  "showRotate": "회전 버튼",
   "showPlaybackSpeed": "Playback speed button",
   "playerControlsSubtitle": "Show or hide player control buttons",
   "exploreAnime": "애니메이션 탐색",
@@ -624,5 +625,14 @@
   "sourcesEmptyNoScrapers": "활성화된 스크레이퍼가 없습니다. 'Nuvio Plugins'에서 추가하세요.",
   "sourcesEmptyAllFailed": "모든 스크레이퍼가 실패했습니다. 연결을 확인하거나 스크레이퍼를 업데이트하세요.",
   "sourcesEmptySomeFailed": "링크를 찾지 못했습니다. {total}개 중 {failed}개 스크레이퍼가 실패했습니다.",
-  "sourcesEmptyNothingFound": "보유한 스크레이퍼 중 이 작품을 가진 것이 없습니다."
+  "sourcesEmptyNothingFound": "보유한 스크레이퍼 중 이 작품을 가진 것이 없습니다.",
+  "showStatusOngoing": "방영 중",
+  "showStatusCompleted": "완결",
+  "comingSoon": "공개 예정",
+  "episodeAirsOn": "{date} 방영",
+  "seasonNumberAndName": "시즌 {number}: {name}",
+  "castLine": "출연: {names}",
+  "actorRoleMain": "주연",
+  "actorRoleSupporting": "조연",
+  "actorRoleBackground": "단역"
 }

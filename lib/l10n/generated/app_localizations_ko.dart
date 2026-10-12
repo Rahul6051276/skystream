@@ -1406,6 +1406,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get showResize => 'Resize button';
 
   @override
+  String get showRotate => '회전 버튼';
+
+  @override
   String get showPlaybackSpeed => 'Playback speed button';
 
   @override
@@ -2320,4 +2323,37 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get swipeAgainToBoost => 'Swipe up again to go past 100%';
+
+  @override
+  String get showStatusOngoing => '방영 중';
+
+  @override
+  String get showStatusCompleted => '완결';
+
+  @override
+  String get comingSoon => '공개 예정';
+
+  @override
+  String episodeAirsOn(String date) {
+    return '$date 방영';
+  }
+
+  @override
+  String seasonNumberAndName(Object number, String name) {
+    return '시즌 $number: $name';
+  }
+
+  @override
+  String castLine(String names) {
+    return '출연: $names';
+  }
+
+  @override
+  String get actorRoleMain => '주연';
+
+  @override
+  String get actorRoleSupporting => '조연';
+
+  @override
+  String get actorRoleBackground => '단역';
 }

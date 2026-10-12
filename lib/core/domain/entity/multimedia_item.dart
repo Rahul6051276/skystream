@@ -5,7 +5,9 @@ import '../../config/tmdb_config.dart';
 
 enum MultimediaContentType { movie, series, anime, livestream, other }
 
-enum ShowStatus { completed, ongoing, upcoming }
+/// A show's run. [unknown] when nothing said: no chip claims a status its
+/// source never gave.
+enum ShowStatus { completed, ongoing, upcoming, unknown }
 
 enum DubStatus { none, dubbed, subbed }
 
@@ -15,7 +17,18 @@ class Actor {
   final String? role;
   final Actor? voiceActor;
 
-  Actor({required this.name, this.image, this.role, this.voiceActor});
+  /// Whether [role] is one of CloudStream's three role names (Main,
+  /// Supporting, Background), which the screens translate, rather than free
+  /// text an extension wrote, which they show as it is.
+  final bool roleIsEnum;
+
+  Actor({
+    required this.name,
+    this.image,
+    this.role,
+    this.voiceActor,
+    this.roleIsEnum = false,
+  });
 
   factory Actor.fromJson(Map<String, dynamic> json) {
     return Actor(
@@ -25,6 +38,7 @@ class Actor {
       voiceActor: json['voiceActor'] != null
           ? Actor.fromJson(Map<String, dynamic>.from(json['voiceActor'] as Map))
           : null,
+      roleIsEnum: (json['roleIsEnum'] as bool?) ?? false,
     );
   }
 
@@ -34,6 +48,7 @@ class Actor {
       'image': image,
       'role': role,
       'voiceActor': voiceActor?.toJson(),
+      'roleIsEnum': roleIsEnum,
     };
   }
 }
@@ -42,7 +57,12 @@ class Trailer {
   final String url;
   final Map<String, String>? headers;
 
-  Trailer({required this.url, this.headers});
+  /// The URL is the video itself, not a page an extractor reads
+  /// (CloudStream's `TrailerData.raw`).
+  final bool raw;
+  final String? referer;
+
+  Trailer({required this.url, this.headers, this.raw = false, this.referer});
 
   factory Trailer.fromJson(Map<String, dynamic> json) {
     return Trailer(
@@ -50,11 +70,13 @@ class Trailer {
       headers: json['headers'] != null
           ? Map<String, String>.from(json['headers'] as Map)
           : null,
+      raw: (json['raw'] as bool?) ?? false,
+      referer: json['referer'] as String?,
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {'url': url, 'headers': headers};
+    return {'url': url, 'headers': headers, 'raw': raw, 'referer': referer};
   }
 }
 
@@ -76,6 +98,29 @@ class NextAiring {
   Map<String, dynamic> toJson() {
     return {'episode': episode, 'unixTime': unixTime, 'season': season};
   }
+}
+
+/// A season's own name, as an extension gives it (CloudStream's
+/// `SeasonData`): shown as "Season [displaySeason]: [name]", or [name] alone
+/// when there is no number to show.
+class SeasonName {
+  final int season;
+  final String? name;
+  final int? displaySeason;
+
+  const SeasonName({required this.season, this.name, this.displaySeason});
+
+  factory SeasonName.fromJson(Map<String, dynamic> json) => SeasonName(
+    season: (json['season'] as num?)?.toInt() ?? 0,
+    name: json['name'] as String?,
+    displaySeason: (json['displaySeason'] as num?)?.toInt(),
+  );
+
+  Map<String, dynamic> toJson() => {
+    'season': season,
+    'name': name,
+    'displaySeason': displaySeason,
+  };
 }
 
 class MultimediaItem {
@@ -105,6 +150,12 @@ class MultimediaItem {
   final String? playbackPolicy;
   final bool isAdult;
   final NextAiring? nextAiring;
+
+  /// Not out yet: nothing to play (CloudStream's `comingSoon`).
+  final bool comingSoon;
+
+  /// The extension's own names for its seasons.
+  final List<SeasonName>? seasonNames;
   final List<StreamResult>? streams;
 
   final int? tmdbId;
@@ -125,7 +176,7 @@ class MultimediaItem {
     this.year,
     this.score,
     this.duration,
-    this.status = ShowStatus.ongoing,
+    this.status = ShowStatus.unknown,
     this.tags,
     this.contentRating,
     this.cast,
@@ -135,6 +186,8 @@ class MultimediaItem {
     this.playbackPolicy,
     this.isAdult = false,
     this.nextAiring,
+    this.comingSoon = false,
+    this.seasonNames,
     this.streams,
     this.tmdbId,
     this.imdbId,
@@ -235,6 +288,15 @@ class MultimediaItem {
               Map<String, dynamic>.from(json['nextAiring'] as Map),
             )
           : null,
+      comingSoon: (json['comingSoon'] as bool?) ?? false,
+      seasonNames: json['seasonNames'] != null
+          ? (json['seasonNames'] as List)
+                .map<SeasonName>(
+                  (s) =>
+                      SeasonName.fromJson(Map<String, dynamic>.from(s as Map)),
+                )
+                .toList()
+          : null,
       // Top level first, then `syncData`.
       //
       // `syncData` is the DOCUMENTED way for a plugin to report external ids
@@ -323,14 +385,23 @@ class MultimediaItem {
     );
   }
 
+  /// A source's word for a show's run, CloudStream's and plugins' own as well
+  /// as TMDB's, MAL's and AniList's. Any other word says nothing, so no chip
+  /// claims a run the source never described.
   static ShowStatus _parseShowStatus(dynamic raw) {
-    if (raw == null) return ShowStatus.ongoing;
+    if (raw == null) return ShowStatus.unknown;
     final str = raw.toString().toLowerCase();
-    if (str.contains('completed')) return ShowStatus.completed;
-    if (str.contains('upcoming') || str.contains('soon')) {
+    bool any(List<String> words) => words.any(str.contains);
+    if (any(['complet', 'ended', 'finish', 'cancel'])) {
+      return ShowStatus.completed;
+    }
+    if (any(['upcoming', 'soon', 'not yet', 'not_yet', 'planned'])) {
       return ShowStatus.upcoming;
     }
-    return ShowStatus.ongoing;
+    if (any(['ongoing', 'airing', 'releasing', 'returning', 'continuing'])) {
+      return ShowStatus.ongoing;
+    }
+    return ShowStatus.unknown;
   }
 
   static MultimediaContentType parseContentType(String? raw) {
@@ -394,6 +465,8 @@ class MultimediaItem {
     String? playbackPolicy,
     bool? isAdult,
     NextAiring? nextAiring,
+    bool? comingSoon,
+    List<SeasonName>? seasonNames,
     List<StreamResult>? streams,
     int? tmdbId,
     String? imdbId,
@@ -423,6 +496,8 @@ class MultimediaItem {
       playbackPolicy: playbackPolicy ?? this.playbackPolicy,
       isAdult: isAdult ?? this.isAdult,
       nextAiring: nextAiring ?? this.nextAiring,
+      comingSoon: comingSoon ?? this.comingSoon,
+      seasonNames: seasonNames ?? this.seasonNames,
       streams: streams ?? this.streams,
       tmdbId: tmdbId ?? this.tmdbId,
       imdbId: imdbId ?? this.imdbId,
@@ -455,6 +530,8 @@ class MultimediaItem {
       'playbackPolicy': playbackPolicy,
       'isAdult': isAdult,
       'nextAiring': nextAiring?.toJson(),
+      'comingSoon': comingSoon,
+      'seasonNames': seasonNames?.map((s) => s.toJson()).toList(),
       'tmdbId': tmdbId,
       'imdbId': imdbId,
       'streams': streams?.map((s) => s.toJson()).toList(),
@@ -500,6 +577,10 @@ class Episode {
   final double? rating;
   final int? runtime;
   final String? airDate;
+
+  /// When it aired, or airs: CloudStream's `date`, kept in UTC. [airDate]
+  /// keeps the text the player's episode list shows.
+  final DateTime? airedAt;
   final DubStatus dubStatus;
   final String? playbackPolicy;
   final List<StreamResult>? streams;
@@ -515,6 +596,7 @@ class Episode {
     this.rating,
     this.runtime,
     this.airDate,
+    this.airedAt,
     this.dubStatus = DubStatus.none,
     this.playbackPolicy,
     this.streams,
@@ -539,6 +621,12 @@ class Episode {
       rating: (json['rating'] as num?)?.toDouble(),
       runtime: (json['runtime'] as int?) ?? (json['duration'] as int?),
       airDate: json['airDate'] as String?,
+      airedAt: json['airedAt'] is num
+          ? DateTime.fromMillisecondsSinceEpoch(
+              (json['airedAt'] as num).toInt(),
+              isUtc: true,
+            )
+          : null,
       dubStatus: _parseDubStatus(json['dubStatus']),
       playbackPolicy:
           (json['playbackPolicy'] as String?) ?? (json['vpnStatus'] as String?),
@@ -575,6 +663,7 @@ class Episode {
       'rating': rating,
       'runtime': runtime,
       'airDate': airDate,
+      'airedAt': airedAt?.millisecondsSinceEpoch,
       'dubStatus': dubStatus.name,
       'playbackPolicy': playbackPolicy,
       'streams': streams?.map((s) => s.toJson()).toList(),

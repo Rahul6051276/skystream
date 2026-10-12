@@ -94,6 +94,21 @@ void main() {
     expect(await _shown(plugin, 'の名'), ['君の名は']);
   });
 
+  test('finds a Traditional Chinese title by a Simplified query', () async {
+    final plugin = _Plugin(['慶餘年 第二季', '甄嬛傳', '流浪地球']);
+    expect(await _shown(plugin, '庆余年'), ['慶餘年 第二季']);
+  });
+
+  test('and a Simplified one by a Traditional query', () async {
+    final plugin = _Plugin(['甄嬛传', '庆余年', '流浪地球']);
+    expect(await _shown(plugin, '甄嬛傳'), ['甄嬛传']);
+  });
+
+  test('also when a Traditional character is Simplified too', () async {
+    final plugin = _Plugin(['復仇者聯盟：終局之戰', '流浪地球']);
+    expect(await _shown(plugin, '复仇者联盟'), ['復仇者聯盟：終局之戰']);
+  });
+
   test('finds a title with a Turkish dotted İ by a plain i', () async {
     final plugin = _Plugin(['İstanbul Hatırası', 'Ankara']);
     expect(await _shown(plugin, 'istanbul'), ['İstanbul Hatırası']);

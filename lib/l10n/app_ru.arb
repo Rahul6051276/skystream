@@ -599,6 +599,7 @@
   "playerControls": "Player Controls",
   "showPip": "Picture-in-Picture button",
   "showResize": "Resize button",
+  "showRotate": "Кнопка поворота",
   "showPlaybackSpeed": "Playback speed button",
   "playerControlsSubtitle": "Show or hide player control buttons",
   "exploreAnime": "Обзор аниме",
@@ -624,5 +625,14 @@
   "sourcesEmptyNoScrapers": "Нет включённых скрейперов. Добавьте в 'Nuvio Plugins'.",
   "sourcesEmptyAllFailed": "Все скрейперы не сработали. Проверьте соединение или обновите их.",
   "sourcesEmptySomeFailed": "Ссылок не найдено. Не сработали {failed} из {total} скрейперов.",
-  "sourcesEmptyNothingFound": "Ни у одного из ваших скрейперов нет этого названия."
+  "sourcesEmptyNothingFound": "Ни у одного из ваших скрейперов нет этого названия.",
+  "showStatusOngoing": "Выходит",
+  "showStatusCompleted": "Завершён",
+  "comingSoon": "Скоро",
+  "episodeAirsOn": "Выйдет {date}",
+  "seasonNumberAndName": "Сезон {number}: {name}",
+  "castLine": "В ролях: {names}",
+  "actorRoleMain": "Главная",
+  "actorRoleSupporting": "Второстепенная",
+  "actorRoleBackground": "Эпизодическая"
 }

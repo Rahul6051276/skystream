@@ -39,12 +39,17 @@ class DeviceProfile {
   /// Coarse capability bucket. See [DeviceTier].
   final DeviceTier tier;
 
+  /// Whether the OS turns the screen when the app asks: see
+  /// [obeysOrientationRequests]. Meaningless on a television or a desktop.
+  final bool obeysOrientationRequests;
+
   const DeviceProfile({
     this.isTv = false,
     this.isTablet = false,
     this.isDesktopOS = false,
     this.physicalRamMb,
     this.tier = DeviceTier.standard,
+    this.obeysOrientationRequests = true,
   });
 
   bool get isLargeScreen => isTv || isTablet || isDesktopOS;
@@ -53,6 +58,20 @@ class DeviceProfile {
   bool get isLowEnd => tier == DeviceTier.low;
 }
 
+/// Whether a handset or tablet turns its screen when an app asks.
+///
+/// iPadOS 26.5 and 27 refuse in both windowing modes, and Android 16 (API 36)
+/// ignores the request on a screen 600 dp wide or more for an app that targets
+/// it, as this one does. Measured on 2026-10-11: the iPad Pro 11-inch (M5)
+/// simulator and the API 36 emulator at 1600x2560 and 320 dpi stayed put,
+/// while the API 35 tablet emulator and both phones turned.
+@visibleForTesting
+bool obeysOrientationRequests({
+  required bool isIOS,
+  required bool isTablet,
+  int? androidSdk,
+}) => !isTablet || (!isIOS && (androidSdk ?? 0) < 36);
+
 @riverpod
 Future<DeviceProfile> deviceProfile(Ref ref) async {
   bool isTv = false;
@@ -60,6 +79,7 @@ Future<DeviceProfile> deviceProfile(Ref ref) async {
   bool isDesktopOS = false;
   int? physicalRamMb;
   var tier = DeviceTier.standard;
+  var obeysOrientation = true;
 
   if (!kIsWeb) {
     if (Platform.isAndroid || Platform.isIOS) {
@@ -86,11 +106,20 @@ Future<DeviceProfile> deviceProfile(Ref ref) async {
         tier = androidInfo.isLowRamDevice
             ? DeviceTier.low
             : _tierFromRam(androidInfo.physicalRamSize);
+        obeysOrientation = obeysOrientationRequests(
+          isIOS: false,
+          isTablet: isTablet,
+          androidSdk: androidInfo.version.sdkInt,
+        );
       } else if (Platform.isIOS) {
         final iosInfo = await deviceInfo.iosInfo;
         isTv = iosInfo.utsname.machine.startsWith('AppleTV') || iosInfo.model == 'Apple TV';
         physicalRamMb = iosInfo.physicalRamSize;
         tier = _tierFromRam(iosInfo.physicalRamSize);
+        obeysOrientation = obeysOrientationRequests(
+          isIOS: true,
+          isTablet: isTablet,
+        );
       }
     }
 
@@ -107,6 +136,7 @@ Future<DeviceProfile> deviceProfile(Ref ref) async {
     isDesktopOS: isDesktopOS,
     physicalRamMb: physicalRamMb,
     tier: tier,
+    obeysOrientationRequests: obeysOrientation,
   );
 }
 

@@ -1428,6 +1428,9 @@ class AppLocalizationsHr extends AppLocalizations {
   String get showResize => 'Resize button';
 
   @override
+  String get showRotate => 'Gumb za rotiranje';
+
+  @override
   String get showPlaybackSpeed => 'Playback speed button';
 
   @override
@@ -2343,4 +2346,37 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get swipeAgainToBoost => 'Swipe up again to go past 100%';
+
+  @override
+  String get showStatusOngoing => 'U tijeku';
+
+  @override
+  String get showStatusCompleted => 'Završeno';
+
+  @override
+  String get comingSoon => 'Uskoro';
+
+  @override
+  String episodeAirsOn(String date) {
+    return 'Emitira se $date';
+  }
+
+  @override
+  String seasonNumberAndName(Object number, String name) {
+    return 'Sezona $number: $name';
+  }
+
+  @override
+  String castLine(String names) {
+    return 'Glumačka postava: $names';
+  }
+
+  @override
+  String get actorRoleMain => 'Glavna';
+
+  @override
+  String get actorRoleSupporting => 'Sporedna';
+
+  @override
+  String get actorRoleBackground => 'Epizodna';
 }

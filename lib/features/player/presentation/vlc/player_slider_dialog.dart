@@ -150,7 +150,8 @@ class PlayerSliderDialog extends StatefulWidget {
   /// the band they are in, so everything below the first line is reachable
   /// only by guessing that Down leads somewhere. Equal columns keep one band
   /// and one arrow walks the lot. The labels are four or five characters, so
-  /// there is room to share.
+  /// there is room to share; one too wide for its column on a small phone (the
+  /// speed dialog's seven) is drawn smaller, never cut.
   final List<double> presets;
 
   final bool isTv;
@@ -436,17 +437,20 @@ class _PresetChipState extends State<_PresetChip> {
               ),
             ),
             child: ExcludeSemantics(
-              child: Text(
-                widget.label,
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                style: TextStyle(
-                  color: widget.selected
-                      ? HotstarPlayerStyle.primaryText
-                      : HotstarPlayerStyle.secondaryText,
-                  fontSize: widget.compact ? 13 : 15,
-                  fontWeight: FontWeight.w800,
-                  fontFeatures: const [FontFeature.tabularFigures()],
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  widget.label,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  style: TextStyle(
+                    color: widget.selected
+                        ? HotstarPlayerStyle.primaryText
+                        : HotstarPlayerStyle.secondaryText,
+                    fontSize: widget.compact ? 13 : 15,
+                    fontWeight: FontWeight.w800,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
                 ),
               ),
             ),

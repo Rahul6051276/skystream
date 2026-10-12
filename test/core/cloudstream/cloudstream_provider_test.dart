@@ -96,6 +96,170 @@ void main() {
       expect(await provider({'links': <Object?>[]}).loadStreams(CloudStreamProvider.token('x')), isEmpty);
     });
   });
+
+  group('details', () {
+    // A title as the engine's `load` sends it (engine Mappers.loadResponse).
+    Map<String, dynamic> anime() => {
+      'name': 'Frieren',
+      'url': 'https://ext.test/frieren',
+      'type': 'Anime',
+      'plot': 'A journey &amp; its end.',
+      'posterUrl': 'https://img.test/poster.jpg',
+      'backgroundPosterUrl': 'https://img.test/back.jpg',
+      'year': 2023,
+      'tags': ['Adventure', 'Fantasy'],
+      'duration': 24,
+      'score': 8.81,
+      'contentRating': 'PG-13',
+      'logoUrl': 'https://img.test/logo.png',
+      'posterHeaders': {'Referer': 'https://ext.test/'},
+      'comingSoon': false,
+      'actors': [
+        {
+          'name': 'Frieren', 'image': 'https://img.test/f.jpg', 'role': 'Main', 'roleString': null,
+          'voiceActor': {'name': 'Atsumi Tanezaki', 'image': 'https://img.test/va.jpg'},
+        },
+        {'name': 'Himmel', 'image': null, 'role': null, 'roleString': 'Hero', 'voiceActor': null},
+      ],
+      'trailers': [
+        {
+          'url': 'https://www.youtube.com/embed/tR8YH0G67Rk', 'referer': 'https://ext.test/', 'raw': false,
+          'headers': <String, String>{},
+        },
+        {'url': '  ', 'referer': null, 'raw': false, 'headers': <String, String>{}},
+      ],
+      'recommendations': [
+        {'name': 'Dungeon Meshi', 'url': 'https://ext.test/meshi', 'type': 'Anime', 'apiName': 'AnimeWorld'},
+        {'name': 'Elsewhere', 'url': 'https://other.test/x', 'type': 'Anime', 'apiName': 'Another'},
+      ],
+      'syncIds': {'mal': '52991', 'anilist': '154587', 'imdb': 'tt22248376', 'tmdb': '209867'},
+      'showStatus': 'Ongoing',
+      'nextAiring': {'episode': 29, 'unixTime': 1900000000, 'season': 2},
+      'seasonNames': [
+        {'season': 1, 'name': 'First Arc', 'displaySeason': null},
+        {'season': 2, 'name': 'Second Arc', 'displaySeason': 2},
+      ],
+      'episodes': [
+        {
+          'name': 'The Journey&#39;s End', 'season': 1, 'episode': 1, 'data': '/ep/1',
+          'posterUrl': 'https://img.test/e1.jpg', 'description': 'Ten years &amp; more.', 'dub': 'Subbed', 'score': 8.2,
+          'date': 1736002800000, 'runTime': 24,
+        },
+        {
+          'name': null, 'season': 2, 'episode': 1, 'data': '/ep/2', 'posterUrl': null, 'description': null,
+          'dub': 'Subbed', 'score': null, 'date': null, 'runTime': null,
+        },
+      ],
+    };
+
+    MultimediaItem map(Map<String, dynamic> result, {DateTime? now}) => CloudStreamProvider.details(
+      result,
+      url: 'https://ext.test/frieren',
+      packageName: 'cs3:repo/AnimeWorld/AnimeWorld',
+      providerName: 'AnimeWorld',
+      now: now ?? DateTime.utc(2026, 10, 11),
+    );
+
+    test("carry everything CloudStream's page shows", () {
+      final item = map(anime());
+      expect(item.score, 8.81);
+      expect(item.contentRating, 'PG-13');
+      expect(item.logoUrl, 'https://img.test/logo.png');
+      expect(item.headers, {'Referer': 'https://ext.test/'});
+      expect(item.status, ShowStatus.ongoing);
+      expect(item.tags, ['Adventure', 'Fantasy']);
+      expect(item.comingSoon, isFalse);
+      expect((item.nextAiring!.episode, item.nextAiring!.unixTime, item.nextAiring!.season), (29, 1900000000, 2));
+      expect(
+        item.seasonNames!.map((s) => (s.season, s.name, s.displaySeason)),
+        [(1, 'First Arc', null), (2, 'Second Arc', 2)],
+      );
+      expect(item.syncData, {'mal': '52991', 'anilist': '154587', 'imdb': 'tt22248376', 'tmdb': '209867'});
+      expect(item.tmdbId, 209867);
+      expect(item.imdbId, 'tt22248376');
+    });
+
+    test('cast: an enum role, free text, and a voice actor', () {
+      final cast = map(anime()).cast!;
+      expect((cast.first.name, cast.first.role, cast.first.roleIsEnum), ('Frieren', 'Main', true));
+      expect(cast.first.voiceActor!.name, 'Atsumi Tanezaki');
+      expect((cast.last.role, cast.last.roleIsEnum, cast.last.image), ('Hero', false, null));
+    });
+
+    test('trailers keep their referer as a header, and a blank one is dropped', () {
+      final trailer = map(anime()).trailers!.single;
+      expect(trailer.url, 'https://www.youtube.com/embed/tR8YH0G67Rk');
+      expect(trailer.referer, 'https://ext.test/');
+      expect(trailer.headers, {'Referer': 'https://ext.test/'});
+    });
+
+    test("recommendations are this extension's only, opened with it", () {
+      final recs = map(anime()).recommendations!;
+      expect(recs.map((r) => r.title), ['Dungeon Meshi']);
+      expect(recs.single.provider, 'cs3:repo/AnimeWorld/AnimeWorld');
+    });
+
+    test('HTML in the plot and episodes is decoded', () {
+      final item = map(anime());
+      expect(item.description, 'A journey & its end.');
+      expect(item.episodes!.first.name, "The Journey's End");
+      expect(item.episodes!.first.description, 'Ten years & more.');
+    });
+
+    test('episodes carry their rating, runtime and air date', () {
+      final episodes = map(anime()).episodes!;
+      expect(episodes.first.rating, 8.2);
+      expect(episodes.first.runtime, 24);
+      expect(episodes.first.airedAt, DateTime.fromMillisecondsSinceEpoch(1736002800000, isUtc: true));
+      expect(episodes.first.airDate, '2025-01-04');
+      expect(episodes.last.name, 'Episode 1');
+      expect(episodes.last.airedAt, isNull);
+    });
+
+    test('a next airing already past is not shown', () {
+      expect(map(anime(), now: DateTime.utc(2031)).nextAiring, isNull);
+    });
+
+    test('the poster falls back to the background', () {
+      expect(map({...anime(), 'posterUrl': null}).posterUrl, 'https://img.test/back.jpg');
+    });
+
+    test('a film with a blank data URL is coming soon, with nothing to play', () {
+      final item = map({'name': 'Soon', 'type': 'Movie', 'dataUrl': '', 'comingSoon': true});
+      expect(item.comingSoon, isTrue);
+      expect(item.episodes, isEmpty);
+    });
+
+    test('nothing said is nothing shown', () {
+      final item = map({'name': 'Bare', 'type': 'Movie', 'dataUrl': '/play'});
+      expect(item.score, isNull);
+      expect(item.status, ShowStatus.unknown);
+      expect(item.cast, isEmpty);
+      expect(item.trailers, isEmpty);
+      expect(item.recommendations, isEmpty);
+      expect(item.syncData, isNull);
+      expect((item.tmdbId, item.imdbId, item.nextAiring), (null, null, null));
+      expect(item.episodes!.single.url, CloudStreamProvider.token('/play'));
+    });
+
+    test('a date beyond any calendar drops that date, not the page', () {
+      // Nanoseconds where CloudStream wants milliseconds (and seconds): DateTime would throw.
+      final item = map({
+        ...anime(),
+        'nextAiring': {'episode': 29, 'unixTime': 1736002800000000000, 'season': 2},
+        'episodes': [
+          {'name': 'E', 'season': 1, 'episode': 1, 'data': '/ep/1', 'date': 1736002800000000000, 'runTime': 24},
+        ],
+      });
+      expect(item.nextAiring, isNull);
+      expect((item.episodes!.single.airedAt, item.episodes!.single.airDate), (null, null));
+      expect(item.episodes!.single.runtime, 24);
+    });
+
+    test('a malformed IMDb id is not promoted', () {
+      expect(map({...anime(), 'syncIds': {'imdb': '22248376'}}).imdbId, isNull);
+    });
+  });
 }
 
 /// An engine host whose every call answers [answer].

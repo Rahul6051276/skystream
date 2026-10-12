@@ -599,6 +599,7 @@
   "playerControls": "Player Controls",
   "showPip": "Picture-in-Picture button",
   "showResize": "Resize button",
+  "showRotate": "Draaiknop",
   "showPlaybackSpeed": "Playback speed button",
   "playerControlsSubtitle": "Show or hide player control buttons",
   "exploreAnime": "Anime ontdekken",
@@ -624,5 +625,14 @@
   "sourcesEmptyNoScrapers": "Geen scrapers ingeschakeld. Voeg er een toe in 'Nuvio Plugins'.",
   "sourcesEmptyAllFailed": "Alle scrapers zijn mislukt. Controleer je verbinding of werk de scrapers bij.",
   "sourcesEmptySomeFailed": "Geen links gevonden. {failed} van {total} scrapers mislukt.",
-  "sourcesEmptyNothingFound": "Geen van je scrapers heeft deze titel."
+  "sourcesEmptyNothingFound": "Geen van je scrapers heeft deze titel.",
+  "showStatusOngoing": "Lopend",
+  "showStatusCompleted": "Afgerond",
+  "comingSoon": "Binnenkort",
+  "episodeAirsOn": "Uitzending op {date}",
+  "seasonNumberAndName": "Seizoen {number}: {name}",
+  "castLine": "Cast: {names}",
+  "actorRoleMain": "Hoofdrol",
+  "actorRoleSupporting": "Bijrol",
+  "actorRoleBackground": "Figurant"
 }

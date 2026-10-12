@@ -5,8 +5,8 @@ import 'package:skystream/features/search/presentation/search_provider.dart';
 typedef _Case = (String kind, String title, String query, bool answers);
 
 /// The 2026-10 survey of search across languages: 206 cases, of which the
-/// matcher before got 155 wrong. These are the 192 it now gets right; the
-/// other 14 are [_limits]. Characters a reader can't see, or can't tell from
+/// matcher before got 155 wrong. These are the 194 it now gets right; the
+/// other 12 are [_limits]. Characters a reader can't see, or can't tell from
 /// ASCII, are written as escapes.
 const _cases = <_Case>[
   // ---- Arabic
@@ -187,6 +187,8 @@ const _cases = <_Case>[
   ('ZH substring', '哈利·波特与魔法石', '哈利波特', true),
   ('ZH substring', '哈利\u{2027}波特：神秘的魔法石', '哈利波特', true),
   ('ZH width', '流浪地球２', '流浪地球2', true),
+  ('ZH trad/simp', '慶餘年 第二季', '庆余年', true),
+  ('ZH trad/simp', '甄嬛傳', '甄嬛传', true),
   ('JA substring', '名探偵コナン 黒鉄の魚影', 'コナン', true),
   ('JA substring', '葬送のフリーレン', 'フリーレン', true),
   ('JA substring', '鬼滅の刃 遊郭編', '刃', true),
@@ -308,20 +310,6 @@ const _limits = <_Limit>[
     'Vietnamese tone marks fold away',
   ),
   ('CY control', 'Мой ласковый и нежный зверь', 'мои', true, 'й folds to и'),
-  (
-    'ZH trad/simp',
-    '慶餘年 第二季',
-    '庆余年',
-    false,
-    'Traditional and Simplified Chinese are not mapped to each other',
-  ),
-  (
-    'ZH trad/simp',
-    '甄嬛傳',
-    '甄嬛传',
-    false,
-    'Traditional and Simplified Chinese are not mapped to each other',
-  ),
   (
     'PUNCT joined',
     'Spiderman 3',

@@ -599,6 +599,7 @@
   "playerControls": "Player Controls",
   "showPip": "Picture-in-Picture button",
   "showResize": "Resize button",
+  "showRotate": "రొటేట్ బటన్",
   "showPlaybackSpeed": "Playback speed button",
   "playerControlsSubtitle": "Show or hide player control buttons",
   "exploreAnime": "యానిమేని అన్వేషించండి",
@@ -624,5 +625,14 @@
   "sourcesEmptyNoScrapers": "ఏ స్క్రేపర్ ప్రారంభించబడలేదు. 'Nuvio Plugins'లో ఒకటి జోడించండి.",
   "sourcesEmptyAllFailed": "అన్ని స్క్రేపర్‌లు విఫలమయ్యాయి. మీ కనెక్షన్ తనిఖీ చేయండి లేదా స్క్రేపర్‌లను నవీకరించండి.",
   "sourcesEmptySomeFailed": "లింక్‌లు కనబడలేదు. {total}లో {failed} స్క్రేపర్‌లు విఫలమయ్యాయి.",
-  "sourcesEmptyNothingFound": "మీ ఏ స్క్రేపర్‌లోనూ ఈ శీర్షిక లేదు."
+  "sourcesEmptyNothingFound": "మీ ఏ స్క్రేపర్‌లోనూ ఈ శీర్షిక లేదు.",
+  "showStatusOngoing": "ప్రసారమవుతోంది",
+  "showStatusCompleted": "పూర్తయింది",
+  "comingSoon": "త్వరలో వస్తోంది",
+  "episodeAirsOn": "{date}న ప్రసారం",
+  "seasonNumberAndName": "సీజన్ {number}: {name}",
+  "castLine": "నటీనటులు: {names}",
+  "actorRoleMain": "ప్రధాన",
+  "actorRoleSupporting": "సహాయ",
+  "actorRoleBackground": "నేపథ్య"
 }

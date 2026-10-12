@@ -1441,6 +1441,9 @@ class AppLocalizationsTe extends AppLocalizations {
   String get showResize => 'Resize button';
 
   @override
+  String get showRotate => 'రొటేట్ బటన్';
+
+  @override
   String get showPlaybackSpeed => 'Playback speed button';
 
   @override
@@ -2356,4 +2359,37 @@ class AppLocalizationsTe extends AppLocalizations {
 
   @override
   String get swipeAgainToBoost => 'Swipe up again to go past 100%';
+
+  @override
+  String get showStatusOngoing => 'ప్రసారమవుతోంది';
+
+  @override
+  String get showStatusCompleted => 'పూర్తయింది';
+
+  @override
+  String get comingSoon => 'త్వరలో వస్తోంది';
+
+  @override
+  String episodeAirsOn(String date) {
+    return '$dateన ప్రసారం';
+  }
+
+  @override
+  String seasonNumberAndName(Object number, String name) {
+    return 'సీజన్ $number: $name';
+  }
+
+  @override
+  String castLine(String names) {
+    return 'నటీనటులు: $names';
+  }
+
+  @override
+  String get actorRoleMain => 'ప్రధాన';
+
+  @override
+  String get actorRoleSupporting => 'సహాయ';
+
+  @override
+  String get actorRoleBackground => 'నేపథ్య';
 }

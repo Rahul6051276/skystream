@@ -259,57 +259,67 @@ class _ContinueWatchingCardState extends ConsumerState<ContinueWatchingCard> {
       onLongPress: () {
         showModalBottomSheet<void>(
           context: context,
-          builder: (context) => Container(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(item.title, style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: 8),
-                ListTile(
-                  leading: const Icon(Icons.info_outline),
-                  title: Text(AppLocalizations.of(context)!.viewDetails),
-                  onTap: () {
-                    Navigator.pop(context);
-                    unawaited(
-                      DetailsRoute($extra: DetailsRouteExtra(item: item))
-                          .push<void>(context),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: Icon(
-                    Icons.delete_outline,
-                    color: Theme.of(context).colorScheme.error,
+          // Over the app's bottom bar, as its dialogs are: the app's
+          // navigator, not the Home tab's.
+          useRootNavigator: true,
+          // Clear of the system's navigation bar, which the sheet reaches.
+          builder: (context) => SafeArea(
+            top: false,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.title,
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
-                  title: Text(
-                    AppLocalizations.of(context)!.removeFromHistory,
-                    style: TextStyle(
+                  const SizedBox(height: 8),
+                  ListTile(
+                    leading: const Icon(Icons.info_outline),
+                    title: Text(AppLocalizations.of(context)!.viewDetails),
+                    onTap: () {
+                      Navigator.pop(context);
+                      unawaited(
+                        DetailsRoute($extra: DetailsRouteExtra(item: item))
+                            .push<void>(context),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(
+                      Icons.delete_outline,
                       color: Theme.of(context).colorScheme.error,
                     ),
+                    title: Text(
+                      AppLocalizations.of(context)!.removeFromHistory,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                    onTap: () {
+                      ref
+                          .read(watchHistoryProvider.notifier)
+                          .removeFromHistory(item.url);
+                      Navigator.pop(context);
+                      ref
+                          .read(notificationServiceProvider)
+                          .showSuccess(
+                            AppLocalizations.of(context)!
+                                .removedFromHistory(item.title),
+                            title: 'Watch History',
+                            icon: Icons.history_rounded,
+                          );
+                    },
                   ),
-                  onTap: () {
-                    ref
-                        .read(watchHistoryProvider.notifier)
-                        .removeFromHistory(item.url);
-                    Navigator.pop(context);
-                    ref
-                        .read(notificationServiceProvider)
-                        .showSuccess(
-                          AppLocalizations.of(context)!
-                              .removedFromHistory(item.title),
-                          title: 'Watch History',
-                          icon: Icons.history_rounded,
-                        );
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.close),
-                  title: Text(AppLocalizations.of(context)!.cancel),
-                  onTap: () => Navigator.pop(context),
-                ),
-              ],
+                  ListTile(
+                    leading: const Icon(Icons.close),
+                    title: Text(AppLocalizations.of(context)!.cancel),
+                    onTap: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
             ),
           ),
         );

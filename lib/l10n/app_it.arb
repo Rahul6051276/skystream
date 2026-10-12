@@ -599,6 +599,7 @@
   "playerControls": "Player Controls",
   "showPip": "Picture-in-Picture button",
   "showResize": "Resize button",
+  "showRotate": "Pulsante di rotazione",
   "showPlaybackSpeed": "Playback speed button",
   "playerControlsSubtitle": "Show or hide player control buttons",
   "exploreAnime": "Esplora anime",
@@ -624,5 +625,14 @@
   "sourcesEmptyNoScrapers": "Nessuno scraper attivo. Aggiungine uno in 'Nuvio Plugins'.",
   "sourcesEmptyAllFailed": "Tutti gli scraper hanno fallito. Controlla la connessione o aggiornali.",
   "sourcesEmptySomeFailed": "Nessun link trovato. {failed} scraper su {total} hanno fallito.",
-  "sourcesEmptyNothingFound": "Nessuno dei tuoi scraper ha questo titolo."
+  "sourcesEmptyNothingFound": "Nessuno dei tuoi scraper ha questo titolo.",
+  "showStatusOngoing": "In corso",
+  "showStatusCompleted": "Concluso",
+  "comingSoon": "Prossimamente",
+  "episodeAirsOn": "In onda il {date}",
+  "seasonNumberAndName": "Stagione {number}: {name}",
+  "castLine": "Cast: {names}",
+  "actorRoleMain": "Principale",
+  "actorRoleSupporting": "Secondario",
+  "actorRoleBackground": "Comparsa"
 }

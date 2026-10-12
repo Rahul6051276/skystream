@@ -599,6 +599,7 @@
   "playerControls": "Player Controls",
   "showPip": "Picture-in-Picture button",
   "showResize": "Resize button",
+  "showRotate": "फिरवण्याचे बटण",
   "showPlaybackSpeed": "Playback speed button",
   "playerControlsSubtitle": "Show or hide player control buttons",
   "exploreAnime": "अ‍ॅनिमे शोधा",
@@ -624,5 +625,14 @@
   "sourcesEmptyNoScrapers": "कोणताही स्क्रॅपर सुरू नाही. 'Nuvio Plugins' मध्ये एक जोडा.",
   "sourcesEmptyAllFailed": "सर्व स्क्रॅपर अयशस्वी झाले. तुमचे कनेक्शन तपासा किंवा स्क्रॅपर अपडेट करा.",
   "sourcesEmptySomeFailed": "कोणतीही लिंक सापडली नाही. {total} पैकी {failed} स्क्रॅपर अयशस्वी.",
-  "sourcesEmptyNothingFound": "तुमच्या कोणत्याही स्क्रॅपरकडे हे शीर्षक नाही."
+  "sourcesEmptyNothingFound": "तुमच्या कोणत्याही स्क्रॅपरकडे हे शीर्षक नाही.",
+  "showStatusOngoing": "सुरू आहे",
+  "showStatusCompleted": "पूर्ण",
+  "comingSoon": "लवकरच येत आहे",
+  "episodeAirsOn": "{date} रोजी प्रसारण",
+  "seasonNumberAndName": "सीझन {number}: {name}",
+  "castLine": "कलाकार: {names}",
+  "actorRoleMain": "मुख्य",
+  "actorRoleSupporting": "सहाय्यक",
+  "actorRoleBackground": "दुय्यम"
 }

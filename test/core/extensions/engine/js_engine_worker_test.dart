@@ -338,6 +338,30 @@ void main() {
       );
     });
   });
+
+  // ── Entity defaults (CloudStream details, Part 1) ─────────────────────────
+  //
+  // A plugin that says nothing about a show's run must not claim one: the
+  // details page shows a status chip only when the source gave a status.
+  group('JsWorkerRunner entity defaults', () {
+    late _Harness h;
+
+    setUp(() => h = _Harness());
+    tearDown(() => h.dispose());
+
+    test("a plugin's item says no status unless the plugin does", () async {
+      await h.load(r'''
+          globalThis.p = {
+            plain: function() { return new MultimediaItem({ title: 'T', url: 'u', posterUrl: '' }).status; },
+            said: function() { return new MultimediaItem({ title: 'T', url: 'u', posterUrl: '', status: 'completed' }).status; }
+          };
+        ''');
+      h.invoke(31, 'p.plain');
+      expect((await h.awaitInvokeResult(31))['result'], 'unknown');
+      h.invoke(32, 'p.said');
+      expect((await h.awaitInvokeResult(32))['result'], 'completed');
+    });
+  });
 }
 
 class _Harness {

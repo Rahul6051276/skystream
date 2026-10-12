@@ -13,6 +13,15 @@
   the clearance's age.
 - **Android:** a resolve sets CloudStream's `WebViewResolver.webViewUserAgent` from the device's
   WebView again, as CloudStream's own resolver did.
+- **`load` answers with everything CloudStream's details page shows:** `score` (out of 10, none
+  under 0.1), `contentRating`, `logoUrl`, `posterHeaders`, `comingSoon`, `actors` (with voice
+  actors), `trailers`, `recommendations` (search items) and `syncIds` (`mal`, `anilist`, `kitsu`,
+  `simkl`, `imdb`, `tmdb`); for shows, `showStatus`, `nextAiring` (`unixTime` in seconds) and
+  `seasonNames`; per episode, `score`, `date` (epoch ms) and `runTime` (minutes). Search items
+  carry `apiName`, `score` and `quality`.
+- **CloudStream's id keys are named at start-up** (`mal`, `kitsu`, `anilist`, `simkl`), as its app
+  does. Every `addMalId`, `addAniListId`, `addImdbId` and `addTMDbId` used to write the one key
+  `""`, each overwriting the last.
 
 ## 0.5.0
 

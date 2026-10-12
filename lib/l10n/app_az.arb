@@ -617,6 +617,7 @@
   "playerControlsSubtitle": "Pleyerin idarə düymələrini göstər və ya gizlət",
   "showPip": "Şəkil içində şəkil düyməsi",
   "showResize": "Ölçü düyməsi",
+  "showRotate": "Döndərmə düyməsi",
   "showPlaybackSpeed": "Oxutma sürəti düyməsi",
   "playerSourceReachable": "Əlçatan",
   "playerFinished": "{title} sona çatdı",
@@ -708,5 +709,14 @@
   "sourcesEmptyNoScrapers": "Aktiv skreper yoxdur. 'Nuvio Plugins' bölməsində əlavə edin.",
   "sourcesEmptyAllFailed": "Bütün skreperlər uğursuz oldu. Bağlantınızı yoxlayın və ya skreperləri yeniləyin.",
   "sourcesEmptySomeFailed": "Keçid tapılmadı. {total} skreperdən {failed} uğursuz oldu.",
-  "sourcesEmptyNothingFound": "Skreperlərinizin heç birində bu başlıq yoxdur."
+  "sourcesEmptyNothingFound": "Skreperlərinizin heç birində bu başlıq yoxdur.",
+  "showStatusOngoing": "Davam edir",
+  "showStatusCompleted": "Tamamlanıb",
+  "comingSoon": "Tezliklə",
+  "episodeAirsOn": "{date} tarixində yayımlanır",
+  "seasonNumberAndName": "Mövsüm {number}: {name}",
+  "castLine": "Aktyor heyəti: {names}",
+  "actorRoleMain": "Əsas",
+  "actorRoleSupporting": "Köməkçi",
+  "actorRoleBackground": "Epizodik"
 }

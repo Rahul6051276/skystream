@@ -1079,10 +1079,14 @@ void main() {
     /// right along them. One turn per axis, because
     /// [DirectionalFocusTraversalPolicyMixin] pops its history on a reversal
     /// and a walk that doubles back measures the backtracking instead.
+    /// Six rights: the speed dialog's seven presets; past the volume dialog's
+    /// five they stay on the last.
     const List<LogicalKeyboardKey> sweep = <LogicalKeyboardKey>[
       LogicalKeyboardKey.arrowDown,
       LogicalKeyboardKey.arrowLeft,
       LogicalKeyboardKey.arrowDown,
+      LogicalKeyboardKey.arrowRight,
+      LogicalKeyboardKey.arrowRight,
       LogicalKeyboardKey.arrowRight,
       LogicalKeyboardKey.arrowRight,
       LogicalKeyboardKey.arrowRight,
@@ -1108,6 +1112,8 @@ void main() {
         '1.25x',
         '1.5x',
         '2x',
+        '3x',
+        '4x',
       });
 
       await _snapshot(tester, state: 'paused');
@@ -3274,11 +3280,12 @@ void main() {
         find.byType(PlayerSliderDialog),
       );
       expect(dialog.min, 0.25);
-      expect(dialog.max, 3.0);
+      // As far as the engine goes.
+      expect(dialog.max, 4.0);
       expect(
         dialog.presets,
-        <double>[0.5, 1.0, 1.25, 1.5, 2.0],
-        reason: 'the five worth one press; the rest is the slider',
+        <double>[0.5, 1.0, 1.25, 1.5, 2.0, 3.0, 4.0],
+        reason: 'the ones worth one press; the rest is the slider',
       );
 
       await tester.tap(find.text('1.5x'));

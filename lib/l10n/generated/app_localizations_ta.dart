@@ -1445,6 +1445,9 @@ class AppLocalizationsTa extends AppLocalizations {
   String get showResize => 'Resize button';
 
   @override
+  String get showRotate => 'சுழற்றும் பொத்தான்';
+
+  @override
   String get showPlaybackSpeed => 'Playback speed button';
 
   @override
@@ -2361,4 +2364,37 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get swipeAgainToBoost => 'Swipe up again to go past 100%';
+
+  @override
+  String get showStatusOngoing => 'ஒளிபரப்பில்';
+
+  @override
+  String get showStatusCompleted => 'முடிந்தது';
+
+  @override
+  String get comingSoon => 'விரைவில்';
+
+  @override
+  String episodeAirsOn(String date) {
+    return '$date அன்று ஒளிபரப்பு';
+  }
+
+  @override
+  String seasonNumberAndName(Object number, String name) {
+    return 'சீசன் $number: $name';
+  }
+
+  @override
+  String castLine(String names) {
+    return 'நடிகர்கள்: $names';
+  }
+
+  @override
+  String get actorRoleMain => 'முதன்மை';
+
+  @override
+  String get actorRoleSupporting => 'துணை';
+
+  @override
+  String get actorRoleBackground => 'பின்னணி';
 }

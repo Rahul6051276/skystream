@@ -32,48 +32,60 @@ class SyncedProgressCard extends ConsumerWidget {
       onLongPress: () {
         showModalBottomSheet<void>(
           context: context,
-          builder: (context) => Container(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(item.title, style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: 8),
-                ListTile(
-                  leading: Icon(
-                    Icons.delete_outline,
-                    color: Theme.of(context).colorScheme.error,
+          // Over the app's bottom bar, as its dialogs are: the app's
+          // navigator, not the Home tab's.
+          useRootNavigator: true,
+          // Clear of the system's navigation bar, which the sheet reaches.
+          builder: (context) => SafeArea(
+            top: false,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.title,
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
-                  title: Text(
-                    AppLocalizations.of(context)!.removeFromHistory,
-                    style: TextStyle(
+                  const SizedBox(height: 8),
+                  ListTile(
+                    leading: Icon(
+                      Icons.delete_outline,
                       color: Theme.of(context).colorScheme.error,
                     ),
+                    title: Text(
+                      AppLocalizations.of(context)!.removeFromHistory,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                    onTap: () async {
+                      final manager = ref.read(syncManagerProvider);
+                      final success = await manager.removePlaybackProgress(
+                        item,
+                      );
+                      if (success && context.mounted) {
+                        ref.invalidate(syncedProgressProvider);
+                        ref
+                            .read(notificationServiceProvider)
+                            .showSuccess(
+                              AppLocalizations.of(context)!
+                                  .removedFromHistory(item.title),
+                              title: 'Watch Progress',
+                              icon: Icons.history_rounded,
+                            );
+                      }
+                      if (context.mounted) Navigator.pop(context);
+                    },
                   ),
-                  onTap: () async {
-                    final manager = ref.read(syncManagerProvider);
-                    final success = await manager.removePlaybackProgress(item);
-                    if (success && context.mounted) {
-                      ref.invalidate(syncedProgressProvider);
-                      ref
-                          .read(notificationServiceProvider)
-                          .showSuccess(
-                            AppLocalizations.of(context)!
-                                .removedFromHistory(item.title),
-                            title: 'Watch Progress',
-                            icon: Icons.history_rounded,
-                          );
-                    }
-                    if (context.mounted) Navigator.pop(context);
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.close),
-                  title: Text(AppLocalizations.of(context)!.cancel),
-                  onTap: () => Navigator.pop(context),
-                ),
-              ],
+                  ListTile(
+                    leading: const Icon(Icons.close),
+                    title: Text(AppLocalizations.of(context)!.cancel),
+                    onTap: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
             ),
           ),
         );

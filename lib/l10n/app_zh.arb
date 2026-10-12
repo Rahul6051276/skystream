@@ -599,6 +599,7 @@
   "playerControls": "Player Controls",
   "showPip": "Picture-in-Picture button",
   "showResize": "Resize button",
+  "showRotate": "旋转按钮",
   "showPlaybackSpeed": "Playback speed button",
   "playerControlsSubtitle": "Show or hide player control buttons",
   "exploreAnime": "探索动漫",
@@ -624,5 +625,14 @@
   "sourcesEmptyNoScrapers": "未启用任何刮削器。请在 'Nuvio Plugins' 中添加。",
   "sourcesEmptyAllFailed": "所有刮削器都失败了。请检查网络连接或更新刮削器。",
   "sourcesEmptySomeFailed": "未找到链接。{total} 个刮削器中有 {failed} 个失败。",
-  "sourcesEmptyNothingFound": "你的刮削器都没有此片。"
+  "sourcesEmptyNothingFound": "你的刮削器都没有此片。",
+  "showStatusOngoing": "连载中",
+  "showStatusCompleted": "已完结",
+  "comingSoon": "即将推出",
+  "episodeAirsOn": "{date} 播出",
+  "seasonNumberAndName": "第 {number} 季：{name}",
+  "castLine": "演员：{names}",
+  "actorRoleMain": "主要",
+  "actorRoleSupporting": "配角",
+  "actorRoleBackground": "路人"
 }

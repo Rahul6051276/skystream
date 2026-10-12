@@ -21,6 +21,7 @@ import '../../../core/services/download_service.dart';
 import '../data/metadata_resolution_service.dart';
 import 'downloaded_file_provider.dart';
 import '../../tracking/data/simkl_service.dart';
+import '../../tracking/domain/sync_ids.dart';
 
 part 'details_controller.g.dart';
 
@@ -398,10 +399,12 @@ class DetailsController extends _$DetailsController {
             final simkl = ref.read(simklServiceProvider);
             final resolved = await simkl.syncIds(enrichedItem);
             if (resolved.isNotEmpty) {
-              final newSyncData = Map<String, String>.from(
-                enrichedItem.syncData ?? {},
+              // Fills the gaps only: an extension's MAL id names the season,
+              // Simkl's (looked up by IMDb or TMDB id) the series.
+              final newSyncData = withLookedUpIds(
+                enrichedItem.syncData,
+                resolved,
               );
-              newSyncData.addAll(resolved);
               finalItem = enrichedItem.copyWith(syncData: newSyncData);
               if (kDebugMode) {
                 debugPrint('DetailsController: Fetched Simkl IDs: $resolved');

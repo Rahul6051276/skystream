@@ -599,6 +599,7 @@
   "playerControls": "Player Controls",
   "showPip": "Picture-in-Picture button",
   "showResize": "Resize button",
+  "showRotate": "ફેરવવાનું બટન",
   "showPlaybackSpeed": "Playback speed button",
   "playerControlsSubtitle": "Show or hide player control buttons",
   "exploreAnime": "એનિમે શોધો",
@@ -624,5 +625,14 @@
   "sourcesEmptyNoScrapers": "કોઈ સ્ક્રેપર સક્રિય નથી. 'Nuvio Plugins'માં એક ઉમેરો.",
   "sourcesEmptyAllFailed": "બધા સ્ક્રેપર નિષ્ફળ ગયા. તમારું કનેક્શન તપાસો અથવા સ્ક્રેપર અપડેટ કરો.",
   "sourcesEmptySomeFailed": "કોઈ લિંક મળી નથી. {total} માંથી {failed} સ્ક્રેપર નિષ્ફળ.",
-  "sourcesEmptyNothingFound": "તમારા કોઈ સ્ક્રેપર પાસે આ શીર્ષક નથી."
+  "sourcesEmptyNothingFound": "તમારા કોઈ સ્ક્રેપર પાસે આ શીર્ષક નથી.",
+  "showStatusOngoing": "ચાલુ છે",
+  "showStatusCompleted": "પૂર્ણ",
+  "comingSoon": "ટૂંક સમયમાં",
+  "episodeAirsOn": "{date} ના રોજ પ્રસારણ",
+  "seasonNumberAndName": "સીઝન {number}: {name}",
+  "castLine": "કલાકારો: {names}",
+  "actorRoleMain": "મુખ્ય",
+  "actorRoleSupporting": "સહાયક",
+  "actorRoleBackground": "ગૌણ"
 }

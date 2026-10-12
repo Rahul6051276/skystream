@@ -5,7 +5,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:io';
 import '../domain/entity/multimedia_item.dart';
@@ -888,7 +888,7 @@ class StorageService {
 
       // Clear Cache Manager (Images)
       try {
-        await DefaultCacheManager().emptyCache();
+        await CachedNetworkImageProvider.defaultCacheManager.emptyCache();
       } catch (e) {
         if (kDebugMode) debugPrint("Error clearing cache manager: $e");
       }
@@ -988,7 +988,7 @@ class StorageService {
   Future<void> clearImageVideoCache() async {
     if (kIsWeb) return;
     try {
-      await DefaultCacheManager().emptyCache();
+      await CachedNetworkImageProvider.defaultCacheManager.emptyCache();
     } catch (e) {
       if (kDebugMode) debugPrint('Error clearing image cache: $e');
     }

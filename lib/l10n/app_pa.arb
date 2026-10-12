@@ -599,6 +599,7 @@
   "playerControls": "Player Controls",
   "showPip": "Picture-in-Picture button",
   "showResize": "Resize button",
+  "showRotate": "ਘੁਮਾਉਣ ਵਾਲਾ ਬਟਨ",
   "showPlaybackSpeed": "Playback speed button",
   "playerControlsSubtitle": "Show or hide player control buttons",
   "exploreAnime": "ਐਨੀਮੇ ਲੱਭੋ",
@@ -624,5 +625,14 @@
   "sourcesEmptyNoScrapers": "ਕੋਈ ਸਕ੍ਰੈਪਰ ਚਾਲੂ ਨਹੀਂ। 'Nuvio Plugins' ਵਿੱਚ ਇੱਕ ਜੋੜੋ।",
   "sourcesEmptyAllFailed": "ਸਾਰੇ ਸਕ੍ਰੈਪਰ ਅਸਫਲ ਰਹੇ। ਆਪਣਾ ਕਨੈਕਸ਼ਨ ਜਾਂਚੋ ਜਾਂ ਸਕ੍ਰੈਪਰ ਅੱਪਡੇਟ ਕਰੋ।",
   "sourcesEmptySomeFailed": "ਕੋਈ ਲਿੰਕ ਨਹੀਂ ਮਿਲਿਆ। {total} ਵਿੱਚੋਂ {failed} ਸਕ੍ਰੈਪਰ ਅਸਫਲ।",
-  "sourcesEmptyNothingFound": "ਤੁਹਾਡੇ ਕਿਸੇ ਵੀ ਸਕ੍ਰੈਪਰ ਕੋਲ ਇਹ ਸਿਰਲੇਖ ਨਹੀਂ ਹੈ।"
+  "sourcesEmptyNothingFound": "ਤੁਹਾਡੇ ਕਿਸੇ ਵੀ ਸਕ੍ਰੈਪਰ ਕੋਲ ਇਹ ਸਿਰਲੇਖ ਨਹੀਂ ਹੈ।",
+  "showStatusOngoing": "ਜਾਰੀ ਹੈ",
+  "showStatusCompleted": "ਪੂਰਾ",
+  "comingSoon": "ਜਲਦੀ ਆ ਰਿਹਾ ਹੈ",
+  "episodeAirsOn": "{date} ਨੂੰ ਪ੍ਰਸਾਰਣ",
+  "seasonNumberAndName": "ਸੀਜ਼ਨ {number}: {name}",
+  "castLine": "ਕਲਾਕਾਰ: {names}",
+  "actorRoleMain": "ਮੁੱਖ",
+  "actorRoleSupporting": "ਸਹਾਇਕ",
+  "actorRoleBackground": "ਗੌਣ"
 }

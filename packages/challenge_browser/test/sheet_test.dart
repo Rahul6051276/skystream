@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:challenge_browser/challenge_browser.dart';
 import 'package:challenge_browser/src/messages.g.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -37,27 +38,40 @@ void main() {
     Future<void>? cleared,
     ChallengeSheetStrings strings = strings,
     Locale? locale,
+    bool inTab = false,
+    double systemBar = 0,
+    double keyboard = 0,
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
+    tester.view.padding = FakeViewPadding(bottom: systemBar);
+    tester.view.viewInsets = FakeViewPadding(bottom: keyboard);
     addTearDown(tester.view.reset);
     late Future<ChallengeSheetResult> result;
+    Widget button(BuildContext context) => Center(
+      child: ElevatedButton(
+        onPressed: () =>
+            result = showChallengeSheet(context, browser: browser, strings: strings, tv: tv, cleared: cleared),
+        child: const Text('Open'),
+      ),
+    );
     await tester.pumpWidget(
       MaterialApp(
         locale: locale,
         supportedLocales: [const Locale('en'), ?locale],
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        home: Builder(
-          builder: (context) => Scaffold(
-            body: Center(
-              child: ElevatedButton(
-                onPressed: () =>
-                    result = showChallengeSheet(context, browser: browser, strings: strings, tv: tv, cleared: cleared),
-                child: const Text('Open'),
-              ),
-            ),
-          ),
-        ),
+        // As in the app: a tab's own navigator, under the app's bottom bar.
+        home: inTab
+            ? Scaffold(
+                extendBody: true,
+                body: Navigator(onGenerateRoute: (_) => MaterialPageRoute<void>(builder: button)),
+                bottomNavigationBar: const ColoredBox(
+                  key: Key('bottom bar'),
+                  color: Color(0xFF2196F3),
+                  child: SizedBox(height: 64, width: double.infinity),
+                ),
+              )
+            : Builder(builder: (context) => Scaffold(body: button(context))),
       ),
     );
     await tester.tap(find.text('Open'));
@@ -225,6 +239,66 @@ void main() {
     await tester.tap(find.text('Done'));
     await tester.pumpAndSettle();
     expect(await result, ChallengeSheetResult.done);
+  }, variant: desktop);
+
+  // A bottom sheet takes a vertical drag for itself: the page under the finger never scrolled, and a drag
+  // down took the whole sheet away.
+  testWidgets('phone: a drag on the page is the page\'s, and never moves the sheet', (tester) async {
+    final browser = await ChallengeBrowser.create();
+    var closed = false;
+    unawaited((await open(tester, browser, size: const Size(400, 800))).then((_) => closed = true));
+    await tester.drag(find.byType(ChallengeBrowserView), const Offset(0, 400));
+    await tester.pumpAndSettle();
+    expect(find.byType(BottomSheet), findsOneWidget);
+    expect(closed, isFalse);
+  }, variant: desktop);
+
+  testWidgets('phone: the page claims its own drags, ahead of anything around it', (tester) async {
+    final browser = await ChallengeBrowser.create();
+    await open(tester, browser, size: const Size(400, 800));
+    final view = tester.widget<ChallengeBrowserView>(find.byType(ChallengeBrowserView));
+    final made = [for (final factory in view.gestureRecognizers) factory.constructor()];
+    addTearDown(() {
+      for (final recognizer in made) {
+        recognizer.dispose();
+      }
+    });
+    expect(made, contains(isA<EagerGestureRecognizer>()));
+  }, variant: desktop);
+
+  testWidgets('phone: the handle still pulls the sheet down', (tester) async {
+    final browser = await ChallengeBrowser.create();
+    final result = await open(tester, browser, size: const Size(400, 800));
+    final sheet = tester.getRect(find.byType(BottomSheet));
+    await tester.dragFrom(Offset(sheet.center.dx, sheet.top + 12), const Offset(0, 600));
+    await tester.pumpAndSettle();
+    expect(find.byType(BottomSheet), findsNothing);
+    expect(await result, ChallengeSheetResult.closed);
+  }, variant: desktop);
+
+  testWidgets('phone: opened from a tab, the sheet is over the app\'s bottom bar', (tester) async {
+    final browser = await ChallengeBrowser.create();
+    await open(tester, browser, size: const Size(400, 800), inTab: true);
+    expect(find.byKey(const Key('bottom bar')), findsOneWidget);
+    expect(find.byKey(const Key('bottom bar')).hitTestable(), findsNothing, reason: 'under the sheet and its barrier');
+  }, variant: desktop);
+
+  testWidgets('phone: Close and Done clear the system\'s navigation bar', (tester) async {
+    final browser = await ChallengeBrowser.create();
+    await open(tester, browser, size: const Size(400, 800), systemBar: 48);
+    for (final label in ['Close', 'Done']) {
+      expect(tester.getRect(find.text(label)).bottom, lessThanOrEqualTo(800 - 48), reason: label);
+    }
+  }, variant: desktop);
+
+  testWidgets('phone: the page and its buttons stay above the keyboard', (tester) async {
+    final browser = await ChallengeBrowser.create();
+    await open(tester, browser, size: const Size(400, 800), keyboard: 300);
+    for (final label in ['Close', 'Done']) {
+      expect(tester.getRect(find.text(label)).bottom, lessThanOrEqualTo(800 - 300), reason: label);
+    }
+    expect(tester.getRect(find.byType(ChallengeBrowserView)).bottom, lessThanOrEqualTo(800 - 300));
+    expect(tester.takeException(), isNull);
   }, variant: desktop);
 
   testWidgets('TV: the whole screen, the D-pad goes up from the page to the buttons and back, Back closes', (

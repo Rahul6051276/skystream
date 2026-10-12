@@ -1,7 +1,33 @@
+import 'dart:collection';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import '../domain/entity/subtitle_model.dart';
+
+/// The player's language [code] as OpenSubtitles and SubDL take it: their
+/// ISO 639-1 codes. Filipino has only an ISO 639-2 code (`fil`); both file it
+/// as Tagalog.
+String _twoLetterCode(String code) => code == 'fil' ? 'tl' : code;
+
+/// The player's language [code] as SubDL files it: Brazil's Portuguese and
+/// Chinese beside another language apart (2026-10-11: `pt` alone found 1
+/// subtitle of Top Gun: Maverick, `br_pt,pt` 6).
+String _subdlLanguages(String code) => switch (code.toLowerCase()) {
+  'pt' => 'br_pt,pt',
+  'zh' => 'zh,zh_bg',
+  final other => _twoLetterCode(other),
+};
+
+/// The player's language [code] as OpenSubtitles files it: Chinese and
+/// Portuguese only by their variants - `zh` and `pt` alone find nothing
+/// (2026-10-11: Top Gun: Maverick, 7 and 12 by their variants) - sorted, as
+/// its documentation asks.
+String _openSubtitlesLanguages(String code) => switch (code.toLowerCase()) {
+  'zh' => 'ze,zh-cn,zh-tw',
+  'pt' => 'pt-br,pt-pt',
+  final other => _twoLetterCode(other),
+};
 
 class OpenSubtitlesProvider extends SubtitleProvider {
   final Dio _dio;
@@ -32,6 +58,11 @@ class OpenSubtitlesProvider extends SubtitleProvider {
   final String? _password;
   String? _token;
   DateTime? _tokenExpiry;
+
+  /// Where requests go: [baseUrl] until a login names the account's own
+  /// server - a VIP account's is another - which the documentation says the
+  /// rest of the session must use.
+  String _apiBase = baseUrl;
 
   OpenSubtitlesProvider(
     this._dio, {
@@ -79,6 +110,11 @@ class OpenSubtitlesProvider extends SubtitleProvider {
 
       if (response.data != null && response.data['token'] != null) {
         _token = response.data?['token'] as String?;
+        final host = response.data?['base_url'];
+        if (host is String && host.isNotEmpty) {
+          final origin = host.startsWith('http') ? host : 'https://$host';
+          _apiBase = origin.endsWith('/api/v1') ? origin : '$origin/api/v1';
+        }
         _tokenExpiry = DateTime.now().add(
           const Duration(hours: 23),
         ); // OS tokens last 24h
@@ -175,17 +211,25 @@ class OpenSubtitlesProvider extends SubtitleProvider {
       );
     }
     try {
-      final String langTag = language ?? "en";
+      final String langTag = _twoLetterCode(language ?? "en");
 
-      // Build query parameters
-      final Map<String, dynamic> params = {'languages': langTag};
-
-      if (imdbId != null) {
-        params['imdb_id'] = imdbId.replaceAll('tt', '');
+      // As the documentation asks: an episode by its show's id with the
+      // season and episode, ids without leading zeros, the text in lower
+      // case and the parameters in alphabetical order - or the search is
+      // redirected first.
+      final params = SplayTreeMap<String, dynamic>();
+      params['languages'] = _openSubtitlesLanguages(language ?? "en");
+      final episodic =
+          (season != null && season > 0) || (episode != null && episode > 0);
+      final imdb = imdbId == null
+          ? null
+          : int.tryParse(imdbId.replaceAll('tt', ''));
+      if (imdb != null) {
+        params[episodic ? 'parent_imdb_id' : 'imdb_id'] = imdb;
       } else if (tmdbId != null) {
-        params['tmdb_id'] = tmdbId;
+        params[episodic ? 'parent_tmdb_id' : 'tmdb_id'] = tmdbId;
       } else {
-        params['query'] = query;
+        params['query'] = query.toLowerCase();
       }
 
       if (season != null && season > 0) params['season_number'] = season;
@@ -205,7 +249,7 @@ class OpenSubtitlesProvider extends SubtitleProvider {
 
       try {
         final response = await _dio.get<dynamic>(
-          "$baseUrl/subtitles",
+          "$_apiBase/subtitles",
           queryParameters: params,
           cancelToken: cancelToken,
           options: Options(headers: headers),
@@ -265,7 +309,7 @@ class OpenSubtitlesProvider extends SubtitleProvider {
           }
 
           final retryResponse = await _dio.get<dynamic>(
-            "$baseUrl/subtitles",
+            "$_apiBase/subtitles",
             queryParameters: params,
             cancelToken: cancelToken,
             options: Options(headers: retryHeaders),
@@ -322,7 +366,7 @@ class OpenSubtitlesProvider extends SubtitleProvider {
       }
 
       final response = await _dio.post<dynamic>(
-        "$baseUrl/download",
+        "$_apiBase/download",
         data: {'file_id': fileId},
         options: Options(headers: headers),
       );
@@ -382,10 +426,13 @@ class SubDLProvider extends SubtitleProvider {
         return [];
       }
 
-      final String langCode = language ?? "en";
+      final String langCode = _twoLetterCode(language ?? "en");
       final Map<String, dynamic> params = {
         'api_key': _apiKey!,
-        'languages': langCode,
+        'languages': _subdlLanguages(language ?? "en"),
+        // The most SubDL gives at once. Its default of ten was often all
+        // season packs and nothing of the episode itself.
+        'subs_per_page': 30,
       };
 
       if (imdbId != null) {
@@ -425,33 +472,67 @@ class SubDLProvider extends SubtitleProvider {
           (response.data['subtitles'] as List?) ?? const <dynamic>[];
       if (kDebugMode) debugPrint("[SubDL] Found ${data.length} results.");
 
-      return data.map((dynamic item) {
-        final map = item as Map<String, dynamic>;
-        final String rawUrl = (map['url'] as String?) ?? "";
+      final exact = <OnlineSubtitle>[];
+      final packs = <OnlineSubtitle>[];
+      for (final item in data.whereType<Map<dynamic, dynamic>>()) {
+        final fit = _fits(item, episode);
+        if (fit == _Fit.other) continue;
+        final String rawUrl = (item['url'] as String?) ?? "";
         // SubDL returns relative paths like /subtitle/123.zip
         // Must prepend the download CDN base URL
         final String fullUrl = rawUrl.isNotEmpty
             ? "$downloadBaseUrl${rawUrl.startsWith('/') ? rawUrl : '/$rawUrl'}"
             : "";
-        return OnlineSubtitle(
-          id: map['id'].toString(),
-          name:
-              (map['release_name'] as String?) ??
-              (map['fileName'] as String?) ??
-              query,
-          language: (map['language'] as String?) ?? langCode,
+        final String release =
+            (item['release_name'] as String?) ??
+            (item['fileName'] as String?) ??
+            query;
+        final subtitle = OnlineSubtitle(
+          // SubDL gives its results no id: the file's name in its download
+          // path is each one's own.
+          id: _idOf(rawUrl) ?? release,
+          name: release,
+          language: (item['language'] as String?) ?? langCode,
           source: name,
           downloadUrl: fullUrl,
-          isHearingImpaired: map['hi'] == 1,
+          isHearingImpaired: item['hi'] == true || item['hi'] == 1,
           metadata: {'url': fullUrl},
         );
-      }).toList();
+        (fit == _Fit.exact ? exact : packs).add(subtitle);
+      }
+      return [...exact, ...packs];
     } catch (e) {
       if (e is! DioException || e.type != DioExceptionType.cancel) {
         if (kDebugMode) debugPrint("SubDL search error: $e");
       }
       return [];
     }
+  }
+
+  /// The name of the file [url] downloads - `3602674-8520054` of
+  /// `/subtitle/3602674-8520054.zip?api_key=…` - or null.
+  static String? _idOf(String url) {
+    final file = (Uri.tryParse(url)?.path ?? '').split('/').last;
+    final dot = file.lastIndexOf('.');
+    final id = dot > 0 ? file.substring(0, dot) : file;
+    return id.isEmpty ? null : id;
+  }
+
+  /// How a result of an [episode]'s search fits it. SubDL lists the season's
+  /// other episodes too (2026-10-11: Breaking Bad S02E05 came with two of
+  /// E01 and 21 season packs beside its own six): one naming an episode must
+  /// name this one, a range must take it in, and one naming none is a pack,
+  /// kept for its file of the episode.
+  static _Fit _fits(Map<dynamic, dynamic> item, int? episode) {
+    if (episode == null || episode <= 0) return _Fit.pack;
+    final own = item['episode'];
+    if (own is int && own > 0) return own == episode ? _Fit.exact : _Fit.other;
+    final from = item['episode_from'];
+    final to = item['episode_end'];
+    if (from is int && to is int && from > 0 && to >= from) {
+      return episode >= from && episode <= to ? _Fit.pack : _Fit.other;
+    }
+    return _Fit.pack;
   }
 
   @override
@@ -574,12 +655,26 @@ class SubDLProvider extends SubtitleProvider {
   }
 }
 
+/// How a SubDL result fits the episode searched for: its own subtitle, one
+/// of its season's packs, or another episode's.
+enum _Fit { exact, pack, other }
+
 /// Provider for SubSource.net.
-/// Supports dual-mode: keyless (CloudStream style) and authenticated (v1).
+/// Supports dual-mode: keyless (the site's own API) and authenticated (v1).
 class SubSourceProvider extends SubtitleProvider {
   final Dio _dio;
   static const String baseUrlV1 = "https://api.subsource.net/api/v1";
-  static const String baseUrlKeyless = "https://api.subsource.net/api";
+
+  /// The API subsource.net's own pages use, which needs no key. The keyless
+  /// endpoints SkyStream used before (`/api/searchMovie` and the rest) answer
+  /// 404 since 2026.
+  static const String baseUrlSite = "https://api.subsource.net/v1";
+
+  /// V1 lists twenty subtitles at a time unless asked for more, a hundred at
+  /// most (2026-10-11: The Matrix has 134 in English); a search reads up to
+  /// [_maxPages] of them.
+  static const int _pageSize = 100;
+  static const int _maxPages = 5;
   final String? _apiKey;
 
   SubSourceProvider(this._dio, {String? apiKey}) : _apiKey = apiKey;
@@ -709,7 +804,7 @@ class SubSourceProvider extends SubtitleProvider {
       );
     }
 
-    // Otherwise, use the keyless CloudStream-style logic (Mode A)
+    // Otherwise, as the site's own pages ask (Mode A)
     return _searchKeyless(
       query: query,
       imdbId: imdbId,
@@ -766,49 +861,71 @@ class SubSourceProvider extends SubtitleProvider {
       final movie = _entryForSeason(movies, season);
       final movieId = movie['movieId'] ?? movie['id'];
 
-      final Map<String, dynamic> subParams = {'movieId': movieId};
+      final Map<String, dynamic> subParams = {
+        'movieId': movieId,
+        'limit': _pageSize,
+      };
       if (language != null) {
-        subParams['language'] = _getLanguageFull(language);
+        subParams['language'] = _siteLanguages(language).join(',');
       }
 
-      final subsResponse = await _dio.get<Map<String, dynamic>>(
-        "$baseUrlV1/subtitles",
-        queryParameters: subParams,
-        cancelToken: cancelToken,
-        options: Options(
-          headers: {...SubtitleProvider.commonHeaders, 'X-API-Key': _apiKey!},
-        ),
-      );
+      // Every page of a long list: the first twenty of Breaking Bad's second
+      // season held two of E05's six.
+      final subs = <dynamic>[];
+      for (var page = 1; page <= _maxPages; page++) {
+        final subsResponse = await _dio.get<Map<String, dynamic>>(
+          "$baseUrlV1/subtitles",
+          queryParameters: {...subParams, 'page': page},
+          cancelToken: cancelToken,
+          options: Options(
+            headers: {...SubtitleProvider.commonHeaders, 'X-API-Key': _apiKey!},
+          ),
+        );
+        final data = subsResponse.data?['data'];
+        subs.addAll(
+          (data is Map && data['results'] != null)
+              ? data['results'] as List<dynamic>
+              : (data is List ? data : const <dynamic>[]),
+        );
+        final pagination = subsResponse.data?['pagination'];
+        final pages = pagination is Map ? pagination['pages'] : null;
+        if (pages is! int || page >= pages) break;
+      }
 
-      final data = subsResponse.data?['data'];
-      final List<dynamic> subs = (data is Map && data['results'] != null)
-          ? data['results'] as List<dynamic>
-          : (data is List ? data : const <dynamic>[]);
+      final results = <OnlineSubtitle>[];
+      for (final s in subs.whereType<Map<dynamic, dynamic>>()) {
+        // A subtitle lists every release it fits, and the episode may be
+        // named in any of them. The V1 subtitles endpoint takes movieId +
+        // language only, so both the season and the episode have to be
+        // applied here (the keyless path gets its season server-side and only
+        // needs the episode).
+        final raw = s['releaseInfo'] ?? s['release_name'] ?? s['file_name'];
+        final names = [
+          if (raw is Iterable)
+            ...raw.map((n) => '$n'.trim())
+          else if (raw != null)
+            '$raw'.trim(),
+        ];
+        final subName = (names.isEmpty ? [query] : names)
+            .where((n) => _matchesSeasonEpisode(n, season, episode))
+            .firstOrNull;
+        if (subName == null) continue;
+        final subId = s['subtitleId'] ?? s['id'];
+        // Labelled with the language asked for, as without a key.
+        final subLang = language ?? _parseString(s['language'], "Unknown");
 
-      final results = subs
-          .map((s) {
-            final subId = s['subtitleId'] ?? s['id'];
-            final subName = _parseString(
-              s['releaseInfo'] ?? s['release_name'] ?? s['file_name'],
-              query,
-            );
-            final subLang = _parseString(s['language'], language ?? "Unknown");
-
-            return OnlineSubtitle(
-              id: subId.toString(),
-              name: subName,
-              language: subLang,
-              source: name,
-              downloadUrl: "$baseUrlV1/subtitles/$subId/download",
-              isHearingImpaired: s['hearingImpaired'] == true || s['hi'] == 1,
-              metadata: {'id': subId, 'mode': 'v1'},
-            );
-          })
-          // The V1 subtitles endpoint takes movieId + language only, so both
-          // the season and the episode have to be applied here (the keyless
-          // path gets its season server-side and only needs the episode).
-          .where((sub) => _matchesSeasonEpisode(sub.name, season, episode))
-          .toList();
+        results.add(
+          OnlineSubtitle(
+            id: subId.toString(),
+            name: subName,
+            language: subLang,
+            source: name,
+            downloadUrl: "$baseUrlV1/subtitles/$subId/download",
+            isHearingImpaired: s['hearingImpaired'] == true || s['hi'] == 1,
+            metadata: {'id': subId, 'mode': 'v1'},
+          ),
+        );
+      }
 
       if (kDebugMode) {
         debugPrint(
@@ -825,7 +942,11 @@ class SubSourceProvider extends SubtitleProvider {
     }
   }
 
-  /// Keyless CloudStream-style implementation.
+  /// The keyless path, as subsource.net's own pages ask: a search by the tt
+  /// id - or the title - names the film or show, and a show's season is a
+  /// list of its own (`the-show/season-2`), so only the episode is matched
+  /// here, by release name. Results are labelled with [language], the code
+  /// they were asked in, as the other providers' are.
   Future<List<OnlineSubtitle>> _searchKeyless({
     required String query,
     String? imdbId,
@@ -834,9 +955,10 @@ class SubSourceProvider extends SubtitleProvider {
     String? language,
     CancelToken? cancelToken,
   }) async {
-    // Improved over CloudStream: Allow fallback to title search if IMDb is null
-    final String searchStr = imdbId ?? query;
-    if (searchStr.isEmpty) {
+    final String searchStr = imdbId != null
+        ? (imdbId.startsWith('tt') ? imdbId : 'tt$imdbId')
+        : query;
+    if (searchStr.trim().isEmpty) {
       if (kDebugMode) {
         print(
           "[SubSource Keyless] Skipping search: Query or IMDb ID required.",
@@ -851,94 +973,49 @@ class SubSourceProvider extends SubtitleProvider {
     }
 
     try {
-      final String imdbOrTitle = (imdbId != null)
-          ? (imdbId.startsWith('tt') ? imdbId : 'tt$imdbId')
-          : query;
-      final String queryLang = _getLanguageFull(language ?? "en");
-
-      // 1. Search for movie internal linkName
       final searchResponse = await _dio.post<Map<String, dynamic>>(
-        "$baseUrlKeyless/searchMovie",
-        data: {'query': imdbOrTitle},
+        "$baseUrlSite/movie/search",
+        data: {'query': searchStr, 'includeSeasons': true, 'limit': 15},
         cancelToken: cancelToken,
-        options: Options(
-          headers: {
-            ...SubtitleProvider.commonHeaders,
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36',
-            'Referer': 'https://subsource.net/',
-            'Origin': 'https://subsource.net/',
-          },
-        ),
+        options: Options(headers: _keylessHeaders),
       );
-
-      if (searchResponse.data == null ||
-          searchResponse.data?['success'] != true) {
+      final found = searchResponse.data?['results'];
+      if (searchResponse.data?['success'] != true ||
+          found is! List ||
+          found.isEmpty) {
         return [];
       }
-      final List<dynamic> found = searchResponse.data?['found'] as List? ?? [];
-      if (found.isEmpty) return [];
+      final list = _keylessList(found, imdbId == null ? query : null, season);
+      if (list == null) return [];
 
-      final String linkName = (found.first['linkName'] as String?) ?? "";
-      if (linkName.isEmpty) return [];
-
-      // 2. Get movie subtitles
-      final Map<String, dynamic> postData = {
-        'langs': '[]',
-        'movieName': linkName,
-      };
-      if (season != null && season > 0) {
-        postData['season'] = "season-$season";
-      }
-
-      final movieResponse = await _dio.post<Map<String, dynamic>>(
-        "$baseUrlKeyless/getMovie",
-        data: postData,
+      final code = language ?? "en";
+      final listResponse = await _dio.get<Map<String, dynamic>>(
+        "$baseUrlSite/subtitles/$list",
+        queryParameters: {
+          'language': _siteLanguages(code).join(','),
+          'sort_by_date': 'false',
+        },
         cancelToken: cancelToken,
-        options: Options(
-          headers: {
-            ...SubtitleProvider.commonHeaders,
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36',
-            'Referer': 'https://subsource.net/',
-            'Origin': 'https://subsource.net/',
-          },
-        ),
+        options: Options(headers: _keylessHeaders),
       );
+      final subs = listResponse.data?['subtitles'];
+      if (subs is! List) return [];
 
-      if (movieResponse.data == null ||
-          movieResponse.data?['success'] != true) {
-        return [];
-      }
-      final List<dynamic> subs = movieResponse.data?['subs'] as List? ?? [];
-
-      // API doesn't filter by episode/lang, so we filter manually like CloudStream
-      final filteredSubs = subs.where((s) {
-        final String lang = (s['lang'] ?? "").toString().toLowerCase();
-        final String release = (s['releaseName'] ?? "").toString();
-
-        final matchesLang = lang == queryLang.toLowerCase();
-        return matchesLang && _matchesEpisode(release, episode);
-      }).toList();
-
-      final results = filteredSubs.map((s) {
-        final subId = s['subId'] ?? s['id'];
-        return OnlineSubtitle(
-          id: subId.toString(),
-          name:
-              (s['releaseName'] as String?) ??
-              (s['file_name'] as String?) ??
-              query,
-          language: (s['lang'] as String?) ?? "Unknown",
-          source: name,
-          downloadUrl: "", // Requires getDownloadUrl for keyless
-          isHearingImpaired: s['hi'] == 1,
-          metadata: {
-            'id': subId,
-            'movie': linkName,
-            'lang': s['lang'],
-            'mode': 'keyless',
-          },
-        );
-      }).toList();
+      final results = <OnlineSubtitle>[
+        for (final s in subs.whereType<Map<dynamic, dynamic>>())
+          if (s['link'] is String &&
+              _matchesEpisode(_parseString(s['release_info'], ''), episode))
+            OnlineSubtitle(
+              id: '${s['id']}',
+              name: _parseString(s['release_info'], query),
+              language: code,
+              source: name,
+              downloadUrl: "", // The token comes from getDownloadUrl.
+              isHearingImpaired:
+                  s['hearing_impaired'] == 1 || s['hearing_impaired'] == true,
+              metadata: {'id': s['id'], 'link': s['link'], 'mode': 'keyless'},
+            ),
+      ];
 
       if (kDebugMode) {
         print("[SubSource Keyless] Found ${results.length} results.");
@@ -952,40 +1029,77 @@ class SubSourceProvider extends SubtitleProvider {
     }
   }
 
+  /// The list a keyless search opens, as a path under `/subtitles`: a film's
+  /// own (`the-film-1999`), or a show's season (`the-show/season-2`) when the
+  /// site lists that season - none when it doesn't. A title search takes the
+  /// entry named [title] over the first one: the site ranks "Escape The
+  /// Matrix" above "The Matrix" for "the matrix".
+  static String? _keylessList(List<dynamic> found, String? title, int? season) {
+    final entries = found.whereType<Map<dynamic, dynamic>>().toList();
+    if (entries.isEmpty) return null;
+    final wanted = title?.trim().toLowerCase();
+    final entry = entries.firstWhere(
+      (e) => wanted != null && '${e['title']}'.trim().toLowerCase() == wanted,
+      orElse: () => entries.first,
+    );
+    final slug = '${entry['link'] ?? ''}'
+        .split('/')
+        .where((part) => part.isNotEmpty)
+        .lastOrNull;
+    if (slug == null) return null;
+    final path = Uri.encodeComponent(slug);
+    if (entry['type'] != 'tvseries' || season == null || season <= 0) {
+      return path;
+    }
+    final seasons = entry['seasons'];
+    if (seasons is List &&
+        seasons.isNotEmpty &&
+        !seasons.any((s) => s is Map && s['season'] == season)) {
+      return null;
+    }
+    return '$path/season-$season';
+  }
+
+  /// The names subsource.net files [code]'s subtitles under, as its own
+  /// language table gives them: every Chinese it has for Chinese (on popular
+  /// films mostly chinese_bg_code, Simplified, and big_5_code, Traditional),
+  /// and both of Filipino's.
+  List<String> _siteLanguages(String code) => switch (code.toLowerCase()) {
+    'zh' => const [
+      'chinese',
+      'chinese_simplified',
+      'chinese_traditional',
+      'chinese_bg_code',
+      'big_5_code',
+      'chinese_bilingual',
+      'chinese_cantonese',
+    ],
+    'fil' => const ['filipino', 'tagalog'],
+    _ => [_getLanguageFull(code)],
+  };
+
   @override
   Future<String?> getDownloadUrl(OnlineSubtitle subtitle) async {
     final mode = subtitle.metadata?['mode'] ?? 'v1';
-    final id = subtitle.metadata?['id'];
 
     if (mode == 'v1') {
       return subtitle.downloadUrl;
     }
 
-    // Keyless Download Flow
-    final movie = subtitle.metadata?['movie'];
-    final lang = subtitle.metadata?['lang'];
-    if (id == null || movie == null || lang == null) return null;
+    // Keyless: the subtitle's own page hands out its download token.
+    final link = subtitle.metadata?['link'];
+    if (link is! String || link.isEmpty) return null;
 
     try {
-      final response = await _dio.post<Map<String, dynamic>>(
-        "$baseUrlKeyless/getSub",
-        data: {'movie': movie, 'lang': lang, 'id': id},
-        options: Options(
-          headers: {
-            ...SubtitleProvider.commonHeaders,
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36',
-            'Referer': 'https://subsource.net/',
-            'Origin': 'https://subsource.net/',
-          },
-        ),
+      final page = link.split('/').map(Uri.encodeComponent).join('/');
+      final response = await _dio.get<Map<String, dynamic>>(
+        "$baseUrlSite/subtitle/$page",
+        options: Options(headers: _keylessHeaders),
       );
-
-      if (response.data != null && response.data?['sub'] != null) {
-        final String? token =
-            response.data?['sub']?['downloadToken'] as String?;
-        if (token != null) {
-          return "$baseUrlKeyless/downloadSub/$token";
-        }
+      final sub = response.data?['subtitle'];
+      final token = sub is Map ? sub['download_token'] : null;
+      if (token is String && token.isNotEmpty) {
+        return "$baseUrlSite/subtitle/download/$token";
       }
     } catch (e) {
       if (kDebugMode) print("[SubSource Keyless] Download failed: $e");
@@ -993,12 +1107,24 @@ class SubSourceProvider extends SubtitleProvider {
     return null;
   }
 
+  /// The browser the keyless path presents itself as.
+  static const String _browserAgent =
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36';
+
   /// Browser-mimicking headers for keyless SubSource
   static const Map<String, String> _keylessBrowserHeaders = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36',
+    'User-Agent': _browserAgent,
     'Referer': 'https://subsource.net/',
     'Origin': 'https://subsource.net/',
     'Accept': '*/*',
+  };
+
+  /// What the keyless path sends the site's API, as its own pages do.
+  static const Map<String, String> _keylessHeaders = {
+    'User-Agent': _browserAgent,
+    'Accept': 'application/json',
+    'Referer': 'https://subsource.net/',
+    'Origin': 'https://subsource.net/',
   };
 
   @override
@@ -1056,7 +1182,14 @@ class SubSourceProvider extends SubtitleProvider {
       'uk': 'ukrainian',
       'ur': 'urdu',
       'vi': 'vietnamese',
-      'zh': 'chinese',
+      // subsource.net's own names, from its language table: Simplified
+      // Chinese is "chinese_bg_code" (Traditional is "big_5_code"), Persian
+      // "farsi_persian", and Filipino is filed as "tagalog" (and "filipino").
+      'zh': 'chinese_bg_code',
+      'fa': 'farsi_persian',
+      'th': 'thai',
+      'az': 'azerbaijani',
+      'fil': 'tagalog',
     };
     return langMap[tag.toLowerCase()] ?? tag.toLowerCase();
   }
@@ -1097,26 +1230,17 @@ class SubSourceProvider extends SubtitleProvider {
         return false;
       }
     } else {
-      // Keyless verification: Just a connectivity check to searchMovie
+      // Keyless: the site's own search answers.
       if (kDebugMode) {
-        print(
-          "[SubSource Keyless] Verifying Connectivity (Mode: CloudStream-style)...",
-        );
+        print("[SubSource Keyless] Verifying Connectivity (Mode: site API)...");
       }
       try {
-        final response = await _dio.post<dynamic>(
-          "$baseUrlKeyless/searchMovie",
-          data: {'query': 'tt0133093'}, // The Matrix
-          options: Options(
-            headers: {
-              ...SubtitleProvider.commonHeaders,
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36',
-              'Referer': 'https://subsource.net/',
-              'Origin': 'https://subsource.net/',
-            },
-          ),
+        final response = await _dio.post<Map<String, dynamic>>(
+          "$baseUrlSite/movie/search",
+          data: {'query': 'tt0133093', 'limit': 1}, // The Matrix
+          options: Options(headers: _keylessHeaders),
         );
-        return response.statusCode == 200;
+        return response.statusCode == 200 && response.data?['success'] == true;
       } catch (e) {
         return false;
       }

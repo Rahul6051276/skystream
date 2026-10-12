@@ -7,8 +7,12 @@ import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:path/path.dart' as p;
 
+import '../../../core/addons/data/addon_repository.dart';
+import '../../../core/addons/data/addon_subtitle_service.dart';
+import '../../../core/addons/models/addon_manifest.dart';
 import '../../../core/network/dio_client_provider.dart';
 import '../../../core/storage/app_temp_directory.dart';
+import '../data/addon_subtitles_provider.dart';
 import '../data/subtitle_providers.dart';
 import '../domain/entity/subtitle_model.dart';
 import '../domain/subtitle_archive.dart';
@@ -97,6 +101,42 @@ typedef _SearchRequest = ({
   String language,
 });
 
+/// The sources a subtitle search asks, in order: OpenSubtitles, SubDL and
+/// SubSource as [settings] key them, then the Stremio add-ons that answer
+/// subtitles - [installed]'s, and OpenSubtitles' keyless one (see
+/// [AddonSubtitleService.sources]). Each under a name of its own: a
+/// download is routed by its result's source.
+List<SubtitleProvider> subtitleSources({
+  required Dio dio,
+  required PlayerSettings settings,
+  required AddonSubtitleService addons,
+  required List<ManagedAddon> installed,
+}) {
+  final sources = <SubtitleProvider>[
+    OpenSubtitlesProvider(
+      dio,
+      username: settings.osUsername,
+      password: settings.osPassword,
+      apiKey: settings.osApiKey,
+    ),
+    // Key only, unlike OpenSubtitles above: SubDL's search endpoint
+    // authenticates with `api_key` and nothing else, and the account pair it
+    // also stores exists to mint that key from the settings dialog. Passing
+    // the pair here would change nothing.
+    SubDLProvider(dio, apiKey: settings.subdlApiKey),
+    SubSourceProvider(dio, apiKey: settings.subsourceApiKey),
+  ];
+  for (final addon in addons.sources(installed)) {
+    final taken = {for (final source in sources) source.name};
+    var name = addon.displayName;
+    if (taken.contains(name)) name = '$name · Stremio';
+    // Two add-ons of one name: the first is asked.
+    if (taken.contains(name)) continue;
+    sources.add(AddonSubtitlesProvider(addons, addon, name: name));
+  }
+  return sources;
+}
+
 @riverpod
 class SubtitleSearch extends _$SubtitleSearch {
   /// Test seam: when non-null, used instead of the three real providers.
@@ -151,6 +191,9 @@ class SubtitleSearch extends _$SubtitleSearch {
         _initializeProviders();
       }
     });
+    // And the add-ons, which are sources too: one installed, enabled or
+    // loaded from storage after this was built.
+    ref.listen(addonRepositoryProvider, (_, _) => _initializeProviders());
 
     _initializeProviders();
     return null;
@@ -163,25 +206,14 @@ class SubtitleSearch extends _$SubtitleSearch {
       return;
     }
 
-    final dio = ref.read(dioClientProvider);
-    final settings =
-        ref.read(playerSettingsProvider).asData?.value ??
-        const PlayerSettings();
-
-    _providers = [
-      OpenSubtitlesProvider(
-        dio,
-        username: settings.osUsername,
-        password: settings.osPassword,
-        apiKey: settings.osApiKey,
-      ),
-      // Key only, unlike OpenSubtitles above: SubDL's search endpoint
-      // authenticates with `api_key` and nothing else, and the account pair it
-      // also stores exists to mint that key from the settings dialog. Passing
-      // the pair here would change nothing.
-      SubDLProvider(dio, apiKey: settings.subdlApiKey),
-      SubSourceProvider(dio, apiKey: settings.subsourceApiKey),
-    ];
+    _providers = subtitleSources(
+      dio: ref.read(dioClientProvider),
+      settings:
+          ref.read(playerSettingsProvider).asData?.value ??
+          const PlayerSettings(),
+      addons: ref.read(addonSubtitleServiceProvider),
+      installed: ref.read(addonRepositoryProvider).enabled,
+    );
   }
 
   /// Searches every provider and publishes results as they arrive.

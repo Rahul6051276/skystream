@@ -20,8 +20,34 @@ import '../download_launcher.dart';
 import '../downloaded_file_provider.dart';
 import 'download_progress_dialog.dart';
 import 'download_management_dialog.dart';
+import 'premium_details_widgets.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/focus/app_focus.dart';
+
+/// The line under an episode's title: its rating, runtime and air date, as
+/// CloudStream shows them; for one not out yet, when it airs. Null when there
+/// is nothing to say. A plugin's text [Episode.airDate] counts too.
+@visibleForTesting
+String? episodeMetaLine(
+  AppLocalizations l10n,
+  Episode episode, {
+  required String Function(DateTime) formatDate,
+  DateTime? now,
+}) {
+  final aired = episode.airedAt ?? DateTime.tryParse(episode.airDate ?? '');
+  final date = aired == null ? null : formatDate(aired.toLocal());
+  if (aired != null && aired.isAfter(now ?? DateTime.now())) {
+    return l10n.episodeAirsOn(date!);
+  }
+  final rating = episode.rating;
+  final runtime = episode.runtime;
+  final parts = [
+    if (rating != null && rating >= 0.1) '★ ${rating.toStringAsFixed(1)}',
+    if (runtime != null && runtime > 0) l10n.playerRuntimeMinutes(runtime),
+    ?date,
+  ];
+  return parts.isEmpty ? null : parts.join(' · ');
+}
 
 class EpisodeCard extends HookConsumerWidget {
   final Episode episode;
@@ -38,6 +64,16 @@ class EpisodeCard extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    final aired = episode.airedAt ?? DateTime.tryParse(episode.airDate ?? '');
+    // Not out yet: the card says when it airs and shows a schedule icon in
+    // place of its play icon, as CloudStream's does. A tap still plays: the
+    // date can be the broadcast's while the site already has the episode.
+    final upcoming = aired != null && aired.isAfter(DateTime.now());
+    final meta = episodeMetaLine(
+      l10n,
+      episode,
+      formatDate: MaterialLocalizations.of(context).formatShortDate,
+    );
     final historyRepo = ref.watch(historyRepositoryProvider);
     final historyItem = ref.watch(
       watchHistoryProvider.select(
@@ -326,21 +362,45 @@ class EpisodeCard extends HookConsumerWidget {
                             isWatched: isWatched,
                             isSelectionMode: isSelectionMode,
                             isSelected: isSelected,
+                            upcoming: upcoming,
                           ),
                           const SizedBox(width: LayoutConstants.spacingMd),
                           Expanded(
-                            child: Text(
-                              "${episode.episode}. ${episode.name.toUpperCase()}",
-                              style: Theme.of(context).textTheme.titleSmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: isWatched
-                                        ? theme.colorScheme.onSurface
-                                              .withValues(alpha: 0.65)
-                                        : theme.colorScheme.onSurface,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "${episode.episode}. ${episode.name.toUpperCase()}",
+                                  style: Theme.of(context).textTheme.titleSmall
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: isWatched
+                                            ? theme.colorScheme.onSurface
+                                                  .withValues(alpha: 0.65)
+                                            : theme.colorScheme.onSurface,
+                                      ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                if (meta != null) ...[
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    meta,
+                                    // Two lines: beside a phone's thumbnail
+                                    // one cut the date.
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.labelMedium
+                                        ?.copyWith(
+                                          color: upcoming
+                                              ? theme.colorScheme.primary
+                                              : theme
+                                                    .colorScheme
+                                                    .onSurfaceVariant,
+                                        ),
                                   ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                                ],
+                              ],
                             ),
                           ),
                         ],
@@ -525,6 +585,7 @@ class EpisodeCard extends HookConsumerWidget {
     required bool isWatched,
     required bool isSelectionMode,
     required bool isSelected,
+    required bool upcoming,
   }) {
     return Stack(
       children: [
@@ -536,6 +597,8 @@ class EpisodeCard extends HookConsumerWidget {
               aspectRatio: 16 / 9,
               child: CachedNetworkImage(
                 imageUrl: episode.posterUrl ?? '',
+                // A CloudStream extension's artwork can need its headers.
+                httpHeaders: artworkHeaders(parentItem),
                 fit: BoxFit.cover,
                 errorWidget: (context, url, error) =>
                     const ThumbnailErrorPlaceholder(),
@@ -613,6 +676,8 @@ class EpisodeCard extends HookConsumerWidget {
                     ? isSelected
                           ? Icons.check_rounded
                           : Icons.add_rounded
+                    : upcoming
+                    ? Icons.schedule_rounded
                     : Icons.play_arrow_rounded,
                 color: Colors.white,
                 size: 24,

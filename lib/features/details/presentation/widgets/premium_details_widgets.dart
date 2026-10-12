@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:skystream/core/cloudstream/cloudstream_provider.dart';
 import 'package:skystream/core/domain/entity/multimedia_item.dart';
 import 'package:skystream/core/utils/image_fallbacks.dart';
 import 'package:skystream/shared/widgets/cards_wrapper.dart';
@@ -9,6 +10,7 @@ import 'package:skystream/shared/widgets/shimmer_placeholder.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:skystream/shared/widgets/thumbnail_error_placeholder.dart';
 import 'package:skystream/core/utils/responsive_breakpoints.dart';
+import 'package:skystream/l10n/generated/app_localizations.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'details_layout_widgets.dart';
@@ -20,6 +22,7 @@ class MetadataBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     // theme and context used in helper methods
     final contentType = item.contentType;
     final showTypeBadge =
@@ -68,6 +71,14 @@ class MetadataBar extends ConsumerWidget {
             borderRadius: 4,
           ),
 
+        if (!isLoading && _showsStatus(item))
+          _buildBorderedInfo(
+            context,
+            item.status == ShowStatus.completed
+                ? l10n.showStatusCompleted
+                : l10n.showStatusOngoing,
+          ),
+
         if (item.duration != null)
           _buildIconInfo(context, Icons.timer_outlined, "${item.duration}m")
         else if (isLoading)
@@ -98,6 +109,15 @@ class MetadataBar extends ConsumerWidget {
       ],
     );
   }
+
+  /// CloudStream shows a run's status for shows only, and only when its
+  /// source said. Not while loading: the item shown then can be one from
+  /// history, saved when `ongoing` was the default.
+  static bool _showsStatus(MultimediaItem item) =>
+      (item.contentType == MultimediaContentType.series ||
+          item.contentType == MultimediaContentType.anime) &&
+      (item.status == ShowStatus.ongoing ||
+          item.status == ShowStatus.completed);
 
   Widget _buildInfoText(BuildContext context, String text) {
     return Text(
@@ -363,8 +383,35 @@ class CastCarousel extends StatelessWidget {
   final List<Actor> cast;
   const CastCarousel({super.key, required this.cast});
 
+  /// A role as the person reads it: CloudStream's three role names
+  /// translated, anything an extension wrote shown as it is.
+  static String? roleLabel(AppLocalizations l10n, Actor actor) {
+    final role = actor.role;
+    if (role == null || !actor.roleIsEnum) return role;
+    return switch (role) {
+      'Main' => l10n.actorRoleMain,
+      'Supporting' => l10n.actorRoleSupporting,
+      'Background' => l10n.actorRoleBackground,
+      _ => role,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (cast.isEmpty) return const SizedBox.shrink();
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    // CloudStream draws cards only when the first actor has a photo, and the
+    // names as one line otherwise.
+    if (cast.first.image == null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: Text(
+          l10n.castLine(cast.map((a) => a.name).join(', ')),
+          style: theme.textTheme.bodyMedium,
+        ),
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -372,8 +419,9 @@ class CastCarousel extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: Text(
             "Cast",
-            style: Theme.of(context).textTheme.titleLarge
-                ?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
         SizedBox(
@@ -384,6 +432,8 @@ class CastCarousel extends StatelessWidget {
             separatorBuilder: (_, _) => const SizedBox(width: 16),
             itemBuilder: (context, index) {
               final actor = cast[index];
+              final role = roleLabel(l10n, actor);
+              final voice = actor.voiceActor;
               return SizedBox(
                 width: 80,
                 child: Column(
@@ -392,6 +442,12 @@ class CastCarousel extends StatelessWidget {
                       radius: 35,
                       backgroundImage: actor.image != null
                           ? CachedNetworkImageProvider(actor.image!)
+                          : null,
+                      // A photo that fails to load leaves the plain circle,
+                      // with no image error in the log (and none failing a
+                      // widget test, where no image ever loads).
+                      onBackgroundImageError: actor.image != null
+                          ? (_, _) {}
                           : null,
                       child: actor.image == null
                           ? const Icon(Icons.person)
@@ -403,17 +459,41 @@ class CastCarousel extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodySmall
-                          ?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                    if (actor.role != null)
+                    if (role != null)
                       Text(
-                        actor.role!,
+                        role,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.labelSmall
-                            ?.copyWith(color: Theme.of(context).hintColor),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.hintColor,
+                        ),
+                      ),
+                    if (voice != null)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.mic_none_rounded,
+                            size: 12,
+                            color: theme.hintColor,
+                          ),
+                          const SizedBox(width: 2),
+                          Flexible(
+                            child: Text(
+                              voice.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.hintColor,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                   ],
                 ),
@@ -580,6 +660,7 @@ class RecommendationsCarousel extends StatelessWidget {
                                   label: item.title,
                                 ) ??
                                 '',
+                            httpHeaders: artworkHeaders(item),
                             fit: BoxFit.cover,
                             width: cardWidth,
                             errorWidget: (_, _, _) =>
@@ -606,6 +687,90 @@ class RecommendationsCarousel extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// The headers [item]'s artwork is fetched with: a CloudStream extension's
+/// poster headers (a Referer, say). Other sources' `headers` aren't defined
+/// for images (a plugin can keep API headers there), so their art goes
+/// without, as everywhere else in the app.
+Map<String, String>? artworkHeaders(MultimediaItem item) =>
+    CloudStreamProvider.isCloudStreamId(item.provider) ? item.headers : null;
+
+/// Whether [item]'s next episode is still to come. One that has passed is not
+/// shown: CloudStream hides it, where the countdown used to say "Airing now"
+/// for good.
+bool nextAiringAhead(MultimediaItem item, {DateTime? now}) {
+  final next = item.nextAiring;
+  // Beyond DateTime's range (a source's nanoseconds): no time to count down to.
+  if (next == null || next.unixTime.abs() > 8640000000000) return false;
+  return next.unixTime * 1000 > (now ?? DateTime.now()).millisecondsSinceEpoch;
+}
+
+/// A title's tags under its synopsis, as CloudStream shows them: ten at most,
+/// for reading, not tapping.
+class TagsRow extends StatelessWidget {
+  const TagsRow({super.key, required this.tags});
+
+  final List<String> tags;
+
+  static const int maxTags = 10;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final tag
+            in tags
+                .map((t) => t.trim())
+                .where((t) => t.isNotEmpty)
+                .take(maxTags))
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.5,
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(tag, style: theme.textTheme.labelMedium),
+          ),
+      ],
+    );
+  }
+}
+
+/// What stands where Play would, for a title not out yet: CloudStream hides
+/// Play there too.
+class ComingSoonLabel extends StatelessWidget {
+  const ComingSoonLabel({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.schedule_rounded, color: theme.colorScheme.primary),
+          const SizedBox(width: 8),
+          Text(
+            AppLocalizations.of(context)!.comingSoon,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

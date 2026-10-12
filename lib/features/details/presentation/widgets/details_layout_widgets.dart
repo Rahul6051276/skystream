@@ -27,6 +27,22 @@ import 'package:skystream/core/providers/device_info_provider.dart';
 import 'package:skystream/core/utils/responsive_breakpoints.dart';
 import 'package:skystream/l10n/generated/app_localizations.dart';
 
+/// A season chip's label: the extension's own name for the season when it
+/// gave one (CloudStream's `SeasonData`), else "Season N".
+String seasonChipLabel(
+  AppLocalizations l10n,
+  int season,
+  List<SeasonName>? names,
+) {
+  final named = names?.firstWhereOrNull((s) => s.season == season);
+  final name = named?.name?.trim();
+  if (named == null || name == null || name.isEmpty) {
+    return l10n.seasonWithNumber(named?.displaySeason ?? season);
+  }
+  final number = named.displaySeason;
+  return number == null ? name : l10n.seasonNumberAndName(number, name);
+}
+
 class DetailsSeasonListWrapper extends ConsumerWidget {
   const DetailsSeasonListWrapper({super.key, required this.itemUrl});
   final String itemUrl;
@@ -41,6 +57,10 @@ class DetailsSeasonListWrapper extends ConsumerWidget {
     final selectedSeason = ref.watch(
       detailsControllerProvider(itemUrl).select((s) => s.selectedSeason),
     );
+    final seasonNames = ref.watch(
+      detailsControllerProvider(itemUrl)
+          .select((s) => s.details.value?.seasonNames),
+    );
     final seasons = seasonMap.keys.toList()..sort();
 
     return SizedBox(
@@ -54,7 +74,9 @@ class DetailsSeasonListWrapper extends ConsumerWidget {
           final s = seasons[index];
           final isSelected = s == selectedSeason;
           return FilterChip(
-            label: Text(AppLocalizations.of(context)!.seasonWithNumber(s)),
+            label: Text(
+              seasonChipLabel(AppLocalizations.of(context)!, s, seasonNames),
+            ),
             selected: isSelected,
             onSelected: (_) => ref
                 .read(detailsControllerProvider(itemUrl).notifier)

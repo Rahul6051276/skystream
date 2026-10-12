@@ -599,6 +599,7 @@
   "playerControls": "Player Controls",
   "showPip": "Picture-in-Picture button",
   "showResize": "Resize button",
+  "showRotate": "ঘোরানোর বোতাম",
   "showPlaybackSpeed": "Playback speed button",
   "playerControlsSubtitle": "Show or hide player control buttons",
   "exploreAnime": "অ্যানিমে অন্বেষণ",
@@ -624,5 +625,14 @@
   "sourcesEmptyNoScrapers": "কোনো স্ক্র্যাপার চালু নেই। 'Nuvio Plugins'-এ একটি যোগ করুন।",
   "sourcesEmptyAllFailed": "সব স্ক্র্যাপার ব্যর্থ হয়েছে। সংযোগ দেখুন বা স্ক্র্যাপার আপডেট করুন।",
   "sourcesEmptySomeFailed": "কোনো লিঙ্ক পাওয়া যায়নি। {total}টির মধ্যে {failed}টি স্ক্র্যাপার ব্যর্থ।",
-  "sourcesEmptyNothingFound": "আপনার কোনো স্ক্র্যাপারে এই শিরোনাম নেই।"
+  "sourcesEmptyNothingFound": "আপনার কোনো স্ক্র্যাপারে এই শিরোনাম নেই।",
+  "showStatusOngoing": "চলছে",
+  "showStatusCompleted": "সম্পূর্ণ",
+  "comingSoon": "শীঘ্রই আসছে",
+  "episodeAirsOn": "{date} তারিখে সম্প্রচার",
+  "seasonNumberAndName": "সিজন {number}: {name}",
+  "castLine": "অভিনয়ে: {names}",
+  "actorRoleMain": "প্রধান",
+  "actorRoleSupporting": "পার্শ্ব",
+  "actorRoleBackground": "গৌণ"
 }

@@ -314,6 +314,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       matrix: ${{ steps.pick.outputs.matrix }}
+      linux: ${{ steps.pick.outputs.linux }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -347,7 +348,7 @@ jobs:
           # "Bundle CloudStream's Java Runtime" step); "" means none, as
           # Android compiles the engine in and iOS embeds its own VM.
           ANDROID='{"name":"Android","os":"ubuntu-latest","build":"flutter build apk --debug","smoke":"","torrserver":"","out":"build/app/outputs/flutter-apk","java_arch":""}'
-          LINUX='{"name":"Linux","os":"ubuntu-22.04","build":"flutter build linux --debug","smoke":"linux","torrserver":"TorrServer-linux-amd64","out":"build/linux/x64/debug/bundle","java_arch":"x64"}'
+          LINUX='{"name":"Linux","os":"ubuntu-26.04","build":"flutter build linux --debug","smoke":"linux","torrserver":"TorrServer-linux-amd64","out":"build/linux/x64/debug/bundle","java_arch":"x64"}'
           # windows-2022, not windows-latest: the release and preview workflows
           # both pin windows-2022 (MSVC 17). On windows-latest the gate would
           # compile the vendored vlc_player C++ with Visual Studio 2026 / MSVC
@@ -361,7 +362,7 @@ jobs:
           # compile, and an arm64-only or x86_64-only break stays invisible
           # until release day -- which is the one day it cannot be absorbed.
           #
-          # Push and nightly only (see SHIPPED below): they double the two
+          # Push and nightly only (see the event check below): they double the two
           # slowest legs, and a pull request already covers the primary
           # architecture of every platform.
           #
@@ -370,17 +371,21 @@ jobs:
           # exercises the command that actually produces the shipped x64 app.
           # It gets no smoke test: the resulting binary is x86_64 and the
           # runner is arm64.
-          LINUX_ARM64='{"name":"Linux-arm64","os":"ubuntu-22.04-arm","build":"flutter build linux --debug","smoke":"linux","torrserver":"TorrServer-linux-arm64","out":"build/linux/arm64/debug/bundle","java_arch":"aarch64"}'
+          LINUX_ARM64='{"name":"Linux-arm64","os":"ubuntu-26.04-arm","build":"flutter build linux --debug","smoke":"linux","torrserver":"TorrServer-linux-arm64","out":"build/linux/arm64/debug/bundle","java_arch":"aarch64"}'
           MACOS_X64='{"name":"macOS-x64","os":"macos-latest","build":"flutter build macos --debug --config-only && cd macos && xcodebuild -workspace Runner.xcworkspace -configuration Debug -scheme Runner -derivedDataPath ../build/macos ARCHS=x86_64 ONLY_ACTIVE_ARCH=NO CODE_SIGNING_ALLOWED=NO build","smoke":"","torrserver":"TorrServer-darwin-amd64","out":"build/macos/Build/Products/Debug","java_arch":"x64"}'
-          CORE="[$ANDROID,$LINUX]"
-          FULL="[$ANDROID,$LINUX,$WINDOWS,$MACOS,$IOS]"
-          SHIPPED="[$ANDROID,$LINUX,$WINDOWS,$MACOS,$IOS,$LINUX_ARM64,$MACOS_X64]"
+          # Linux builds in a job of its own, inside a container (build-linux
+          # below), so its legs are a matrix of their own.
+          CORE="[$ANDROID]"
+          FULL="[$ANDROID,$WINDOWS,$MACOS,$IOS]"
+          SHIPPED="[$ANDROID,$WINDOWS,$MACOS,$IOS,$MACOS_X64]"
 
           if [ "$EVENT_NAME" != 'pull_request' ]; then
             echo "Event is $EVENT_NAME: building every shipping platform and arch."
             echo "matrix=$SHIPPED" >> "$GITHUB_OUTPUT"
+            echo "linux=[$LINUX,$LINUX_ARM64]" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+          echo "linux=[$LINUX]" >> "$GITHUB_OUTPUT"
 
           # Anything that can change what a native toolchain compiles or links.
           NATIVE='^(packages/|android/|ios/|macos/|windows/|linux/|pubspec\.(yaml|lock)$|\.github/workflows/ci\.yml$)'
@@ -417,29 +422,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # Skipped on arm64 Linux, which has no prebuilt SDK to download -- see
-      # the git clone below.
       - uses: subosito/flutter-action@v2
-        if: matrix.name != 'Linux-arm64'
         with:
           channel: 'stable'
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
-
-      # Flutter ships no linux-arm64 SDK archive, so flutter-action cannot
-      # resolve one and fails the leg outright with "Unable to determine
-      # Flutter version for channel: stable version: <x> architecture: arm64".
-      # Cloning the tagged SDK and letting it bootstrap itself on first use is
-      # what release.yml already does for its own arm64 Linux leg; this
-      # mirrors it, because a gate that sets Flutter up differently from the
-      # release is not gating the release.
-      - name: Set Up Flutter (ARM64 Linux)
-        if: matrix.name == 'Linux-arm64'
-        run: |
-          set -euo pipefail
-          git clone https://github.com/flutter/flutter.git \
-            -b "$FLUTTER_VERSION" --depth 1 "$RUNNER_TOOL_CACHE/flutter"
-          echo "$RUNNER_TOOL_CACHE/flutter/bin" >> "$GITHUB_PATH"
 
       # android/app/build.gradle.kts pins source/targetCompatibility to 17.
       # Pin the toolchain too rather than inherit whichever JDK the runner
@@ -463,28 +450,6 @@ jobs:
         uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: latest-stable
-
-      # Same set the release workflow installs, which is the only evidence we
-      # have that it is sufficient. libvlc-dev is what the vendored vlc_player
-      # plugin links against; libsecret-1-dev is flutter_secure_storage_linux.
-      # package:jni is an FFI plugin here and looks for a JDK, but its CMake
-      # falls through to an empty target when one is absent, so it needs no
-      # apt package of its own.
-      - name: Install Linux Dependencies
-        if: startsWith(matrix.name, 'Linux')
-        run: |
-          # ports.ubuntu.com, which the arm64 runner uses, resets plain-HTTP
-          # connections often enough to flake the job. release.yml rewrites it
-          # to HTTPS for exactly this reason; harmless on x64, which does not
-          # use that host at all.
-          sudo sed -i 's|http://ports.ubuntu.com|https://ports.ubuntu.com|g' \
-            /etc/apt/sources.list /etc/apt/sources.list.d/*.list 2>/dev/null || true
-          sudo apt-get update -o Acquire::Retries=5 -o Acquire::http::Timeout=30
-          sudo apt-get install -y --no-install-recommends \
-            clang cmake ninja-build pkg-config \
-            libgtk-3-dev liblzma-dev libvlc-dev libasound2-dev libsecret-1-dev \
-            libwebkit2gtk-4.1-dev \
-            xvfb
 
       - name: Cache Pub Dependencies
         uses: actions/cache@v6
@@ -640,9 +605,6 @@ jobs:
       # being pointed at an unwritable user-data folder inside Program Files.
       # Both compiled cleanly. See integration_test/app_smoke_test.dart.
       #
-      # xvfb on Linux: the runner is headless and a desktop Flutter app needs
-      # an X server to open a window at all.
-      #
       # integration_test/cloudstream/ is left out: those tests reach live sites
       # and install extensions, so they run on request (CS3_E2E) and skip
       # without it. So are integration_test/clearance/, which solves bot checks
@@ -667,11 +629,160 @@ jobs:
             < <(find integration_test -name '*_test.dart' -not -path 'integration_test/cloudstream/*' -not -path 'integration_test/clearance/*' -not -path 'integration_test/sign_in/*' -not -path 'integration_test/checks/*' -not -path 'integration_test/search/*' -not -path 'integration_test/device/*' | sort)
           failed=0
           for test in "${TESTS[@]}"; do
-            if [ "$DEVICE" = 'linux' ]; then
-              xvfb-run -a flutter test --no-pub "$test" -d "$DEVICE" || failed=1
-            else
-              flutter test --no-pub "$test" -d "$DEVICE" || failed=1
-            fi
+            flutter test --no-pub "$test" -d "$DEVICE" || failed=1
+          done
+          exit $failed
+
+  # The Linux legs of the build above, built the way release.yml and
+  # preview.yml build Linux: on the newest runners, inside Ubuntu 22.04. The
+  # build's glibc is the floor of every Linux artifact, and 22.04 keeps it at
+  # 2.35 (Ubuntu 22.04, Debian 12 and newer). A job of their own because a
+  # matrix cannot put some legs in a container and not others. The steps are
+  # the build job's; their reasons are in its comments.
+  build-linux:
+    name: Build ${{ matrix.name }}
+    needs: changes
+    runs-on: ${{ matrix.os }}
+    container: ubuntu:22.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.changes.outputs.linux) }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      # The image is bare: steps run as root, and there is no sudo, git, curl
+      # or jq. git first, so actions/checkout makes a real clone rather than
+      # unpacking a tarball; curl, jq and xz are what the Flutter setup uses.
+      - name: Prepare Build Container
+        run: |
+          apt-get update -o Acquire::Retries=5 -o Acquire::http::Timeout=30
+          apt-get install -y --no-install-recommends \
+            ca-certificates git curl jq unzip xz-utils zip
+          # ports.ubuntu.com, which arm64 uses, resets plain-HTTP connections
+          # often enough to flake the job: HTTPS from here on.
+          sed -i 's|http://ports.ubuntu.com|https://ports.ubuntu.com|g' \
+            /etc/apt/sources.list /etc/apt/sources.list.d/*.list 2>/dev/null || true
+          # The checkout belongs to the runner's user, not to root.
+          git config --global --add safe.directory '*'
+
+      - uses: actions/checkout@v7
+
+      # Skipped on arm64 Linux, which has no prebuilt SDK to download -- see
+      # the git clone below.
+      - uses: subosito/flutter-action@v2
+        if: matrix.name != 'Linux-arm64'
+        with:
+          channel: 'stable'
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      # Flutter ships no linux-arm64 SDK archive, so flutter-action cannot
+      # resolve one and fails the leg outright with "Unable to determine
+      # Flutter version for channel: stable version: <x> architecture: arm64".
+      # Cloning the tagged SDK and letting it bootstrap itself on first use is
+      # what release.yml already does for its own arm64 Linux leg; this
+      # mirrors it, because a gate that sets Flutter up differently from the
+      # release is not gating the release.
+      - name: Set Up Flutter (ARM64 Linux)
+        if: matrix.name == 'Linux-arm64'
+        run: |
+          set -euo pipefail
+          git clone https://github.com/flutter/flutter.git \
+            -b "$FLUTTER_VERSION" --depth 1 "$RUNNER_TOOL_CACHE/flutter"
+          echo "$RUNNER_TOOL_CACHE/flutter/bin" >> "$GITHUB_PATH"
+
+      # Same set the release workflow installs, which is the only evidence we
+      # have that it is sufficient. libvlc-dev is what the vendored vlc_player
+      # plugin links against; libsecret-1-dev is flutter_secure_storage_linux.
+      # package:jni is an FFI plugin here and looks for a JDK, but its CMake
+      # falls through to an empty target when one is absent, so it needs no
+      # apt package of its own. g++ because packages/flutter_js_ng compiles
+      # QuickJS with gcc and g++ by name (the runner images have them, the
+      # container does not). xvfb and xauth are for the smoke test: the
+      # container is headless and a desktop Flutter app needs an X server to
+      # open a window at all.
+      - name: Install Linux Dependencies
+        run: |
+          apt-get update -o Acquire::Retries=5 -o Acquire::http::Timeout=30
+          apt-get install -y --no-install-recommends \
+            clang g++ cmake ninja-build pkg-config \
+            libgtk-3-dev liblzma-dev libvlc-dev libasound2-dev libsecret-1-dev \
+            libwebkit2gtk-4.1-dev \
+            xvfb xauth
+
+      - name: Cache Pub Dependencies
+        uses: actions/cache@v6
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-${{ runner.arch }}-pub-${{ hashFiles('pubspec.lock', 'packages/*/pubspec.yaml') }}
+          restore-keys: ${{ runner.os }}-${{ runner.arch }}-pub-
+
+      - name: Enable Desktop Targets
+        run: flutter config --enable-linux-desktop
+
+      - name: Install Flutter Dependencies
+        run: |
+          flutter pub get
+          flutter gen-l10n
+          dart run build_runner build --delete-conflicting-outputs
+
+      - name: Trim TorrServer Binaries
+        env:
+          KEEP: ${{ matrix.torrserver }}
+        run: |
+          set -euo pipefail
+          cd packages/flutter_torrent_server/assets/torrserver
+          test -f "$KEEP" || { echo "::error::$KEEP not found in assets/torrserver/"; exit 1; }
+          find . -type f ! -name "$KEEP" -delete
+          ls -l
+
+      - name: Set Up Java For CloudStream's Runtime
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          architecture: ${{ matrix.java_arch }}
+
+      - name: Bundle CloudStream's Java Runtime
+        run: dart run packages/cs3_engine/tool/build_runtime.dart --java-home "$JAVA_HOME"
+
+      - name: Build ${{ matrix.name }}
+        run: ${{ matrix.build }}
+
+      - name: Package ${{ matrix.name }} Build
+        env:
+          OUT: ${{ matrix.out }}
+        run: |
+          set -euo pipefail
+          if [ ! -d "$OUT" ]; then
+            echo "::error::no build output at $OUT"
+            echo "build/ contains:"
+            find build -maxdepth 4 -type d 2>/dev/null | head -40
+            exit 1
+          fi
+          mkdir -p ci-artifacts
+          tar -czf "ci-artifacts/skystream-${{ matrix.name }}-debug.tar.gz" -C "$OUT" .
+          ls -lh ci-artifacts
+
+      - name: Upload ${{ matrix.name }} Build
+        uses: actions/upload-artifact@v7
+        with:
+          name: skystream-${{ matrix.name }}-debug
+          path: ci-artifacts/skystream-${{ matrix.name }}-debug.tar.gz
+          retention-days: 7
+          if-no-files-found: error
+
+      - name: Smoke Test ${{ matrix.name }}
+        run: |
+          TESTS=()
+          while IFS= read -r test; do TESTS+=("$test"); done \
+            < <(find integration_test -name '*_test.dart' -not -path 'integration_test/cloudstream/*' -not -path 'integration_test/clearance/*' -not -path 'integration_test/sign_in/*' -not -path 'integration_test/checks/*' -not -path 'integration_test/search/*' -not -path 'integration_test/device/*' | sort)
+          failed=0
+          for test in "${TESTS[@]}"; do
+            xvfb-run -a flutter test --no-pub "$test" -d linux || failed=1
           done
           exit $failed
 

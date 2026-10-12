@@ -599,6 +599,7 @@
   "playerControls": "Player Controls",
   "showPip": "Picture-in-Picture button",
   "showResize": "Resize button",
+  "showRotate": "Pagriešanas poga",
   "showPlaybackSpeed": "Playback speed button",
   "playerControlsSubtitle": "Show or hide player control buttons",
   "exploreAnime": "Pārlūkot anime",
@@ -624,5 +625,14 @@
   "sourcesEmptyNoScrapers": "Nav ieslēgtu skrāperu. Pievienojiet to sadaļā 'Nuvio Plugins'.",
   "sourcesEmptyAllFailed": "Visi skrāperi neizdevās. Pārbaudiet savienojumu vai atjauniniet tos.",
   "sourcesEmptySomeFailed": "Saites nav atrastas. Neizdevās {failed} no {total} skrāperiem.",
-  "sourcesEmptyNothingFound": "Nevienam no jūsu skrāperiem nav šī nosaukuma."
+  "sourcesEmptyNothingFound": "Nevienam no jūsu skrāperiem nav šī nosaukuma.",
+  "showStatusOngoing": "Turpinās",
+  "showStatusCompleted": "Pabeigts",
+  "comingSoon": "Drīzumā",
+  "episodeAirsOn": "Pārraide {date}",
+  "seasonNumberAndName": "{number}. sezona: {name}",
+  "castLine": "Lomās: {names}",
+  "actorRoleMain": "Galvenā",
+  "actorRoleSupporting": "Otrā plāna",
+  "actorRoleBackground": "Epizodiskā"
 }

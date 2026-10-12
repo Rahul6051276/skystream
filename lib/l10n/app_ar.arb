@@ -599,6 +599,7 @@
   "playerControls": "Player Controls",
   "showPip": "Picture-in-Picture button",
   "showResize": "Resize button",
+  "showRotate": "زر التدوير",
   "showPlaybackSpeed": "Playback speed button",
   "playerControlsSubtitle": "Show or hide player control buttons",
   "exploreAnime": "استكشاف الأنمي",
@@ -624,5 +625,14 @@
   "sourcesEmptyNoScrapers": "لا توجد أدوات استخراج مفعّلة. أضف واحدة من 'Nuvio Plugins'.",
   "sourcesEmptyAllFailed": "فشلت جميع أدوات الاستخراج. تحقّق من اتصالك أو حدّث أدواتك.",
   "sourcesEmptySomeFailed": "لم يتم العثور على روابط. فشلت {failed} من {total} أداة.",
-  "sourcesEmptyNothingFound": "لا تحتوي أي من أدواتك على هذا العنوان."
+  "sourcesEmptyNothingFound": "لا تحتوي أي من أدواتك على هذا العنوان.",
+  "showStatusOngoing": "مستمر",
+  "showStatusCompleted": "مكتمل",
+  "comingSoon": "قريبًا",
+  "episodeAirsOn": "يُعرض في {date}",
+  "seasonNumberAndName": "الموسم {number}: {name}",
+  "castLine": "طاقم التمثيل: {names}",
+  "actorRoleMain": "رئيسي",
+  "actorRoleSupporting": "ثانوي",
+  "actorRoleBackground": "هامشي"
 }

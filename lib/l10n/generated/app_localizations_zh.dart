@@ -1390,6 +1390,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get showResize => 'Resize button';
 
   @override
+  String get showRotate => '旋转按钮';
+
+  @override
   String get showPlaybackSpeed => 'Playback speed button';
 
   @override
@@ -2301,6 +2304,39 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get swipeAgainToBoost => 'Swipe up again to go past 100%';
+
+  @override
+  String get showStatusOngoing => '连载中';
+
+  @override
+  String get showStatusCompleted => '已完结';
+
+  @override
+  String get comingSoon => '即将推出';
+
+  @override
+  String episodeAirsOn(String date) {
+    return '$date 播出';
+  }
+
+  @override
+  String seasonNumberAndName(Object number, String name) {
+    return '第 $number 季：$name';
+  }
+
+  @override
+  String castLine(String names) {
+    return '演员：$names';
+  }
+
+  @override
+  String get actorRoleMain => '主要';
+
+  @override
+  String get actorRoleSupporting => '配角';
+
+  @override
+  String get actorRoleBackground => '路人';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -3608,6 +3644,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get showResize => 'Resize button';
 
   @override
+  String get showRotate => '旋轉按鈕';
+
+  @override
   String get showPlaybackSpeed => 'Playback speed button';
 
   @override
@@ -3632,4 +3671,37 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get sourcesEmptyNothingFound => '你的抓取器都沒有此片。';
+
+  @override
+  String get showStatusOngoing => '連載中';
+
+  @override
+  String get showStatusCompleted => '已完結';
+
+  @override
+  String get comingSoon => '即將推出';
+
+  @override
+  String episodeAirsOn(String date) {
+    return '$date 播出';
+  }
+
+  @override
+  String seasonNumberAndName(Object number, String name) {
+    return '第 $number 季：$name';
+  }
+
+  @override
+  String castLine(String names) {
+    return '演員：$names';
+  }
+
+  @override
+  String get actorRoleMain => '主要';
+
+  @override
+  String get actorRoleSupporting => '配角';
+
+  @override
+  String get actorRoleBackground => '路人';
 }

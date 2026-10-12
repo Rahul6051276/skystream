@@ -9,6 +9,7 @@ import '../../../../core/storage/storage_service.dart';
 import '../../../../core/domain/entity/multimedia_item.dart';
 import '../../explore/data/explore_tmdb_provider.dart';
 import '../domain/sync_progress_item.dart';
+import '../domain/sync_ids.dart';
 import 'simkl_service.dart';
 import 'sync_outbox.dart';
 import 'trakt_service.dart';
@@ -64,7 +65,9 @@ class SyncManager {
     try {
       final simkl = _services.whereType<SimklService>().first;
       final resolved = await simkl.syncIds(item);
-      ids.addAll(resolved);
+      // Fills the gaps only: the title's own MAL and AniList ids name its
+      // season, Simkl's (looked up by IMDb or TMDB id) the series.
+      ids.addAll(withLookedUpIds(item.syncData, resolved));
       resolvedRemotely = resolved.isNotEmpty;
     } catch (e) {
       // Ignore

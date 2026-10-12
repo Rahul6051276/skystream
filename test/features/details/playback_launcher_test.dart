@@ -234,6 +234,47 @@ void main() {
     }
   });
 
+  group('the source picker for a chosen player', () {
+    // Home's Continue Watching card launches from inside the Home tab: the
+    // picker has to come up over the app's bottom bar, as its dialogs do.
+    testWidgets('opens over the app\'s bottom bar from inside a tab', (
+      tester,
+    ) async {
+      final _Harness harness = await _pump(
+        tester,
+        preferredPlayer: 'mx_player',
+        inTab: true,
+        overrides: [
+          activeProviderProvider.overrideWithValue(
+            _ScreenProvider(
+              links: const [
+                StreamResult(url: 'https://cdn.test/a.mkv', source: 'alpha'),
+                StreamResult(url: 'https://cdn.test/b.mkv', source: 'beta'),
+              ],
+            ),
+          ),
+          downloadServiceProvider.overrideWith((Ref ref) => _NoDownloads(ref)),
+        ],
+      );
+      unawaited(
+        harness.launcher.play(
+          harness.context,
+          'https://example.test/episode',
+          baseItem: MultimediaItem(title: 'Show', url: '', posterUrl: ''),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(BottomSheet), findsOneWidget);
+      expect(find.text('alpha'), findsOneWidget);
+      expect(
+        find.byKey(const Key('bottom bar')).hitTestable(),
+        findsNothing,
+        reason: 'under the picker and its barrier',
+      );
+    });
+  });
+
   group("a Play an extension's own full-screen screen took", () {
     testWidgets('ends quietly with a chosen player too: no fallback to the built-in one, which would open it again', (
       tester,
@@ -323,10 +364,14 @@ class _Harness {
 
 /// A two-route app: a home to launch from and a stand-in for the player, so
 /// `PlayerRoute(...).push()` resolves without building the real screen.
+///
+/// [inTab] puts the home inside a shell with a bottom bar, as the app's tabs
+/// are: the home's navigator is the tab's, not the app's.
 Future<_Harness> _pump(
   WidgetTester tester, {
   String? preferredPlayer,
   List<Override> overrides = const <Override>[],
+  bool inTab = false,
 }) async {
   final NotificationService notifications = NotificationService();
   addTearDown(notifications.dispose);
@@ -344,15 +389,31 @@ Future<_Harness> _pump(
 
   final _Harness harness = _Harness(container, notifications);
 
+  final GoRoute home = GoRoute(
+    path: '/',
+    builder: (BuildContext context, GoRouterState state) {
+      harness.context = context;
+      return const Scaffold(body: Text('home'));
+    },
+  );
   final GoRouter router = GoRouter(
     routes: <RouteBase>[
-      GoRoute(
-        path: '/',
-        builder: (BuildContext context, GoRouterState state) {
-          harness.context = context;
-          return const Scaffold(body: Text('home'));
-        },
-      ),
+      if (inTab)
+        ShellRoute(
+          builder: (BuildContext context, GoRouterState state, Widget child) =>
+              Scaffold(
+                extendBody: true,
+                body: child,
+                bottomNavigationBar: const ColoredBox(
+                  key: Key('bottom bar'),
+                  color: Color(0xFF2196F3),
+                  child: SizedBox(height: 64, width: double.infinity),
+                ),
+              ),
+          routes: <RouteBase>[home],
+        )
+      else
+        home,
       GoRoute(
         path: '/player',
         builder: (BuildContext context, GoRouterState state) {

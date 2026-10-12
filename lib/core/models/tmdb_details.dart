@@ -296,6 +296,8 @@ class TmdbDetails extends MultimediaItem {
     String? playbackPolicy,
     bool? isAdult,
     NextAiring? nextAiring,
+    bool? comingSoon,
+    List<SeasonName>? seasonNames,
     List<StreamResult>? streams,
     int? tmdbId,
     String? imdbId,

@@ -1446,6 +1446,9 @@ class AppLocalizationsKn extends AppLocalizations {
   String get showResize => 'Resize button';
 
   @override
+  String get showRotate => 'ತಿರುಗಿಸುವ ಬಟನ್';
+
+  @override
   String get showPlaybackSpeed => 'Playback speed button';
 
   @override
@@ -2359,4 +2362,37 @@ class AppLocalizationsKn extends AppLocalizations {
 
   @override
   String get swipeAgainToBoost => '100% ಮೀರಿ ಹೋಗಲು ಮತ್ತೆ ಮೇಲಕ್ಕೆ ಸ್ವೈಪ್ ಮಾಡಿ';
+
+  @override
+  String get showStatusOngoing => 'ಪ್ರಸಾರವಾಗುತ್ತಿದೆ';
+
+  @override
+  String get showStatusCompleted => 'ಪೂರ್ಣಗೊಂಡಿದೆ';
+
+  @override
+  String get comingSoon => 'ಶೀಘ್ರದಲ್ಲೇ ಬರಲಿದೆ';
+
+  @override
+  String episodeAirsOn(String date) {
+    return '$date ರಂದು ಪ್ರಸಾರ';
+  }
+
+  @override
+  String seasonNumberAndName(Object number, String name) {
+    return 'ಸೀಸನ್ $number: $name';
+  }
+
+  @override
+  String castLine(String names) {
+    return 'ಪಾತ್ರವರ್ಗ: $names';
+  }
+
+  @override
+  String get actorRoleMain => 'ಮುಖ್ಯ';
+
+  @override
+  String get actorRoleSupporting => 'ಪೋಷಕ';
+
+  @override
+  String get actorRoleBackground => 'ಗೌಣ';
 }

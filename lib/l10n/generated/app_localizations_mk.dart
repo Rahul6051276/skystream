@@ -1430,6 +1430,9 @@ class AppLocalizationsMk extends AppLocalizations {
   String get showResize => 'Resize button';
 
   @override
+  String get showRotate => 'Копче за ротирање';
+
+  @override
   String get showPlaybackSpeed => 'Playback speed button';
 
   @override
@@ -2345,4 +2348,37 @@ class AppLocalizationsMk extends AppLocalizations {
 
   @override
   String get swipeAgainToBoost => 'Swipe up again to go past 100%';
+
+  @override
+  String get showStatusOngoing => 'Во тек';
+
+  @override
+  String get showStatusCompleted => 'Завршена';
+
+  @override
+  String get comingSoon => 'Наскоро';
+
+  @override
+  String episodeAirsOn(String date) {
+    return 'Се емитува на $date';
+  }
+
+  @override
+  String seasonNumberAndName(Object number, String name) {
+    return 'Сезона $number: $name';
+  }
+
+  @override
+  String castLine(String names) {
+    return 'Актерска екипа: $names';
+  }
+
+  @override
+  String get actorRoleMain => 'Главна';
+
+  @override
+  String get actorRoleSupporting => 'Споредна';
+
+  @override
+  String get actorRoleBackground => 'Епизодна';
 }

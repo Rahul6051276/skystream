@@ -1446,6 +1446,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get showResize => 'Resize button';
 
   @override
+  String get showRotate => 'Schaltfläche zum Drehen';
+
+  @override
   String get showPlaybackSpeed => 'Playback speed button';
 
   @override
@@ -2361,4 +2364,37 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get swipeAgainToBoost => 'Swipe up again to go past 100%';
+
+  @override
+  String get showStatusOngoing => 'Laufend';
+
+  @override
+  String get showStatusCompleted => 'Abgeschlossen';
+
+  @override
+  String get comingSoon => 'Demnächst';
+
+  @override
+  String episodeAirsOn(String date) {
+    return 'Ausstrahlung am $date';
+  }
+
+  @override
+  String seasonNumberAndName(Object number, String name) {
+    return 'Staffel $number: $name';
+  }
+
+  @override
+  String castLine(String names) {
+    return 'Besetzung: $names';
+  }
+
+  @override
+  String get actorRoleMain => 'Hauptrolle';
+
+  @override
+  String get actorRoleSupporting => 'Nebenrolle';
+
+  @override
+  String get actorRoleBackground => 'Statistenrolle';
 }

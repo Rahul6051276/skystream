@@ -1,0 +1,115 @@
+/// The item model's fields for what extensions provide (CloudStream details,
+/// Part 1): each survives the JSON trip history and the library store items
+/// on.
+library;
+
+import 'package:flutter_test/flutter_test.dart';
+import 'package:skystream/core/domain/entity/multimedia_item.dart';
+
+MultimediaItem _roundTrip(MultimediaItem item) =>
+    MultimediaItem.fromJson(item.toJson());
+
+void main() {
+  group('show status', () {
+    test('is unknown when nothing says', () {
+      expect(
+        MultimediaItem(title: 'T', url: 'u', posterUrl: '').status,
+        ShowStatus.unknown,
+      );
+      expect(
+        MultimediaItem.fromJson({'title': 'T', 'url': 'u', 'posterUrl': ''})
+            .status,
+        ShowStatus.unknown,
+      );
+    });
+
+    test('reads what a source says, and keeps unknown through JSON', () {
+      MultimediaItem withStatus(String raw) => MultimediaItem.fromJson({
+        'title': 'T',
+        'url': 'u',
+        'posterUrl': '',
+        'status': raw,
+      });
+      expect(withStatus('Completed').status, ShowStatus.completed);
+      expect(withStatus('Ongoing').status, ShowStatus.ongoing);
+      expect(withStatus('unknown').status, ShowStatus.unknown);
+      expect(
+        _roundTrip(MultimediaItem(title: 'T', url: 'u', posterUrl: '')).status,
+        ShowStatus.unknown,
+      );
+    });
+  });
+
+  test("other sources' words map, and one it doesn't know says nothing", () {
+    ShowStatus status(String raw) => MultimediaItem.fromJson({
+      'title': 'T',
+      'url': 'u',
+      'posterUrl': '',
+      'status': raw,
+    }).status;
+    // TMDB, MAL and AniList words, as plugins pass them on.
+    for (final raw in ['Ended', 'Finished Airing', 'Canceled', 'CANCELLED']) {
+      expect(status(raw), ShowStatus.completed, reason: raw);
+    }
+    for (final raw in ['Currently Airing', 'Returning Series', 'RELEASING']) {
+      expect(status(raw), ShowStatus.ongoing, reason: raw);
+    }
+    for (final raw in ['Not yet aired', 'NOT_YET_RELEASED', 'Planned']) {
+      expect(status(raw), ShowStatus.upcoming, reason: raw);
+    }
+    for (final raw in ['Hiatus', 'Rumored', '']) {
+      expect(status(raw), ShowStatus.unknown, reason: raw);
+    }
+  });
+
+  test('coming soon and season names survive JSON and copyWith', () {
+    final item = MultimediaItem(
+      title: 'T',
+      url: 'u',
+      posterUrl: '',
+      comingSoon: true,
+      seasonNames: const [
+        SeasonName(season: 1, name: 'First Arc'),
+        SeasonName(season: 2, name: 'Second Arc', displaySeason: 2),
+      ],
+    );
+    final back = _roundTrip(item);
+    expect(back.comingSoon, isTrue);
+    expect(back.seasonNames!.map((s) => (s.season, s.name, s.displaySeason)), [
+      (1, 'First Arc', null),
+      (2, 'Second Arc', 2),
+    ]);
+    expect(item.copyWith(title: 'U').seasonNames, hasLength(2));
+    expect(item.copyWith(title: 'U').comingSoon, isTrue);
+  });
+
+  test("a cast member's role kind and a trailer's raw flag survive JSON", () {
+    final item = _roundTrip(
+      MultimediaItem(
+        title: 'T',
+        url: 'u',
+        posterUrl: '',
+        cast: [Actor(name: 'Frieren', role: 'Main', roleIsEnum: true)],
+        trailers: [
+          Trailer(
+            url: 'https://x.test/t.m3u8',
+            raw: true,
+            referer: 'https://x.test/',
+          ),
+        ],
+      ),
+    );
+    expect(item.cast!.single.roleIsEnum, isTrue);
+    expect(item.trailers!.single.raw, isTrue);
+    expect(item.trailers!.single.referer, 'https://x.test/');
+  });
+
+  test("an episode's air time survives JSON, in UTC", () {
+    final aired = DateTime.utc(2025, 1, 4, 15);
+    final episode = Episode.fromJson(
+      Episode(name: 'E', url: 'e', airedAt: aired).toJson(),
+    );
+    expect(episode.airedAt, aired);
+    expect(episode.airedAt!.isUtc, isTrue);
+  });
+}

@@ -599,6 +599,7 @@
   "playerControls": "Player Controls",
   "showPip": "Picture-in-Picture button",
   "showResize": "Resize button",
+  "showRotate": "روٹیٹ بٹن",
   "showPlaybackSpeed": "Playback speed button",
   "playerControlsSubtitle": "Show or hide player control buttons",
   "exploreAnime": "اینیمے دریافت کریں",
@@ -624,5 +625,14 @@
   "sourcesEmptyNoScrapers": "کوئی اسکریپر فعال نہیں۔ 'Nuvio Plugins' میں ایک شامل کریں۔",
   "sourcesEmptyAllFailed": "تمام اسکریپرز ناکام ہو گئے۔ اپنا کنکشن دیکھیں یا اسکریپرز اپ ڈیٹ کریں۔",
   "sourcesEmptySomeFailed": "کوئی لنک نہیں ملا۔ {total} میں سے {failed} اسکریپرز ناکام۔",
-  "sourcesEmptyNothingFound": "آپ کے کسی اسکریپر کے پاس یہ عنوان نہیں ہے۔"
+  "sourcesEmptyNothingFound": "آپ کے کسی اسکریپر کے پاس یہ عنوان نہیں ہے۔",
+  "showStatusOngoing": "جاری",
+  "showStatusCompleted": "مکمل",
+  "comingSoon": "جلد آ رہا ہے",
+  "episodeAirsOn": "{date} کو نشر",
+  "seasonNumberAndName": "سیزن {number}: {name}",
+  "castLine": "کاسٹ: {names}",
+  "actorRoleMain": "مرکزی",
+  "actorRoleSupporting": "معاون",
+  "actorRoleBackground": "ضمنی"
 }

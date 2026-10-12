@@ -1435,6 +1435,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get showResize => 'Resize button';
 
   @override
+  String get showRotate => 'Tombol putar';
+
+  @override
   String get showPlaybackSpeed => 'Playback speed button';
 
   @override
@@ -2351,4 +2354,37 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get swipeAgainToBoost => 'Swipe up again to go past 100%';
+
+  @override
+  String get showStatusOngoing => 'Sedang tayang';
+
+  @override
+  String get showStatusCompleted => 'Tamat';
+
+  @override
+  String get comingSoon => 'Segera hadir';
+
+  @override
+  String episodeAirsOn(String date) {
+    return 'Tayang $date';
+  }
+
+  @override
+  String seasonNumberAndName(Object number, String name) {
+    return 'Musim $number: $name';
+  }
+
+  @override
+  String castLine(String names) {
+    return 'Pemeran: $names';
+  }
+
+  @override
+  String get actorRoleMain => 'Utama';
+
+  @override
+  String get actorRoleSupporting => 'Pendukung';
+
+  @override
+  String get actorRoleBackground => 'Figuran';
 }

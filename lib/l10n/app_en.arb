@@ -765,6 +765,7 @@
   "playerControlsSubtitle": "Show or hide player control buttons",
   "showPip": "Picture-in-Picture button",
   "showResize": "Resize button",
+  "showRotate": "Rotate button",
   "showPlaybackSpeed": "Playback speed button",
   "showVolume": "Volume button",
   "@showVolume": {
@@ -1825,5 +1826,23 @@
   "cloudStreamSettingsStopped": "{name}'s settings stopped: {error}",
   "@cloudStreamSettingsStopped": {"description": "Snackbar when an extension's code crashed while its settings screen was open.", "placeholders": {"name": {"type": "String"}, "error": {"type": "String"}}},
   "swipeAgainToBoost": "Swipe up again to go past 100%",
-  "@swipeAgainToBoost": {"description": "Player toast when a volume swipe that started under 100% stops at 100%: going past it into the boost takes a second swipe."}
+  "@swipeAgainToBoost": {"description": "Player toast when a volume swipe that started under 100% stops at 100%: going past it into the boost takes a second swipe."},
+  "showStatusOngoing": "Ongoing",
+  "@showStatusOngoing": {"description": "Details page: a show still airing new episodes."},
+  "showStatusCompleted": "Completed",
+  "@showStatusCompleted": {"description": "Details page: a show that has finished airing."},
+  "comingSoon": "Coming soon",
+  "@comingSoon": {"description": "Details page: shown instead of Play for a title not out yet."},
+  "episodeAirsOn": "Airs {date}",
+  "@episodeAirsOn": {"description": "Episode card: an episode not out yet, with its air date.", "placeholders": {"date": {"type": "String"}}},
+  "seasonNumberAndName": "Season {number}: {name}",
+  "@seasonNumberAndName": {"description": "Season chip for a season with its own name.", "placeholders": {"number": {"type": "Object"}, "name": {"type": "String"}}},
+  "castLine": "Cast: {names}",
+  "@castLine": {"description": "Details page: the cast as one line, when there are no photos.", "placeholders": {"names": {"type": "String"}}},
+  "actorRoleMain": "Main",
+  "@actorRoleMain": {"description": "Cast card: a main character."},
+  "actorRoleSupporting": "Supporting",
+  "@actorRoleSupporting": {"description": "Cast card: a supporting character."},
+  "actorRoleBackground": "Background",
+  "@actorRoleBackground": {"description": "Cast card: a background (minor) character."}
 }

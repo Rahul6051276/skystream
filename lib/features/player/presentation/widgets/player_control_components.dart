@@ -134,11 +134,15 @@ class PlayerBackButtonSlot extends StatelessWidget {
   /// {@macro flutter.widgets.Focus.autofocus}
   final bool autofocus;
 
+  /// The button's node, for a caller that hands the remote to it later.
+  final FocusNode? focusNode;
+
   const PlayerBackButtonSlot({
     super.key,
     required this.onPressed,
     this.isTv = false,
     this.autofocus = false,
+    this.focusNode,
   });
 
   @override
@@ -157,6 +161,7 @@ class PlayerBackButtonSlot extends StatelessWidget {
             onPressed: onPressed,
             isTv: isTv,
             autofocus: autofocus,
+            focusNode: focusNode,
           ),
         ),
       ),

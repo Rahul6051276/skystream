@@ -20,7 +20,8 @@ import com.lagradost.cloudstream3.utils.newExtractorLink
  * ones do: a support pop-up from the home page, a bot check of its own from search, a choice from its links; and
  * pages: a promotion from Home's second page, and a check the person waits on as a title opens (a URL ending
  * `#verify`); a game, Play opening it full screen (Phase 7c): `/game/stuck` swallows Back, `/game/dialogs` takes its
- * page's dialogs, `/game/appdialogs` leaves them to the app; Home's fourth page, what the game's page saw.
+ * page's dialogs, `/game/appdialogs` leaves them to the app; Home's fourth page, what the game's page saw; and
+ * `/anime/rich`, a title with everything CloudStream's details page shows (CloudStream details, Part 1).
  */
 class TestProvider(private val title: String) : MainAPI() {
     override var name = title
@@ -45,6 +46,7 @@ class TestProvider(private val title: String) : MainAPI() {
     }
 
     override suspend fun load(url: String): LoadResponse {
+        if (url.endsWith("/anime/rich")) return Rich.title(this, url)
         if (url.contains("/game/")) return newMovieLoadResponse("Test Game", url, TvType.Movie, url)
         if (url.endsWith("#verify")) Pages.verify()
         return newMovieLoadResponse("Test Movie", url, TvType.Movie, "$mainUrl/play/1")

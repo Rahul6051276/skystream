@@ -384,6 +384,31 @@ void main() {
     expect(plugins.single.repositoryId, 'repo.a');
   });
 
+  // Plugins come from the lists a repository names. A list written into the
+  // manifest itself is not read: no repository publishes one - SkyStream's
+  // CLI writes pluginLists only - and SkyStream no longer supports them.
+  test('a manifest\'s own plugins list is not read', () async {
+    final repo = ExtensionRepository.fromJson(<String, dynamic>{
+      'name': 'A',
+      'packageName': 'repo.a',
+      'pluginLists': <String>['$base/plugins.json'],
+      'plugins': <Map<String, dynamic>>[
+        <String, dynamic>{
+          'packageName': 'com.example.inline',
+          'name': 'Inline',
+          'url': 'https://cdn.test/inline.sky',
+          'version': 1,
+        },
+      ],
+    }, '$base/repo.json');
+
+    final plugins = await service.getRepoPlugins(repo);
+
+    expect(plugins.map((plugin) => plugin.packageName), <String>[
+      'com.example.alpha',
+    ]);
+  });
+
   // Where a plugin comes from is where it was listed, whatever the entry
   // says - and an entry saying something that is not an address does not
   // take the rest of the listing down with it.

@@ -88,6 +88,7 @@ class DetailsDesktopHero extends ConsumerWidget {
             blendMode: BlendMode.dstOut,
             child: CachedNetworkImage(
               imageUrl: backdropUrl,
+              httpHeaders: artworkHeaders(displayItem),
               fit: BoxFit.cover,
               alignment: Alignment.centerRight,
               // Bound decoded bitmap; plugin-supplied backdrops are often
@@ -167,6 +168,7 @@ class DetailsDesktopHero extends ConsumerWidget {
                         child: displayItem.logoUrl != null
                             ? CachedNetworkImage(
                                 imageUrl: displayItem.logoUrl!,
+                                httpHeaders: artworkHeaders(displayItem),
                                 height: 200,
                                 alignment: Alignment.centerLeft,
                                 fit: BoxFit.contain,
@@ -197,9 +199,14 @@ class DetailsDesktopHero extends ConsumerWidget {
                           height: 1.5,
                         ),
                       ),
+                      if (displayItem.tags != null &&
+                          displayItem.tags!.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        TagsRow(tags: displayItem.tags!),
+                      ],
 
                       // Next airing (for currently-airing shows)
-                      if (displayItem.nextAiring != null) ...[
+                      if (nextAiringAhead(displayItem)) ...[
                         const SizedBox(height: 20),
                         NextAiringWidget(nextAiring: displayItem.nextAiring!),
                       ],
@@ -211,11 +218,14 @@ class DetailsDesktopHero extends ConsumerWidget {
                       // the full hero area — looks better on wide screens.
                       ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 400),
-                        child: DetailsActionButtons(
-                          item: baseItem,
-                          details: details,
-                          itemUrl: itemUrl,
-                        ),
+                        // Nothing to play yet: CloudStream hides Play there too.
+                        child: displayItem.comingSoon
+                            ? const ComingSoonLabel()
+                            : DetailsActionButtons(
+                                item: baseItem,
+                                details: details,
+                                itemUrl: itemUrl,
+                              ),
                       ),
                     ],
                   ),

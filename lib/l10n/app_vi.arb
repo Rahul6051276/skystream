@@ -599,6 +599,7 @@
   "playerControls": "Player Controls",
   "showPip": "Picture-in-Picture button",
   "showResize": "Resize button",
+  "showRotate": "Nút xoay",
   "showPlaybackSpeed": "Playback speed button",
   "playerControlsSubtitle": "Show or hide player control buttons",
   "exploreAnime": "Khám phá anime",
@@ -624,5 +625,14 @@
   "sourcesEmptyNoScrapers": "Chưa bật scraper nào. Thêm một cái trong 'Nuvio Plugins'.",
   "sourcesEmptyAllFailed": "Tất cả scraper đều thất bại. Kiểm tra kết nối hoặc cập nhật scraper.",
   "sourcesEmptySomeFailed": "Không tìm thấy liên kết. {failed}/{total} scraper thất bại.",
-  "sourcesEmptyNothingFound": "Không scraper nào của bạn có tựa đề này."
+  "sourcesEmptyNothingFound": "Không scraper nào của bạn có tựa đề này.",
+  "showStatusOngoing": "Đang phát sóng",
+  "showStatusCompleted": "Đã hoàn thành",
+  "comingSoon": "Sắp ra mắt",
+  "episodeAirsOn": "Phát sóng {date}",
+  "seasonNumberAndName": "Phần {number}: {name}",
+  "castLine": "Diễn viên: {names}",
+  "actorRoleMain": "Chính",
+  "actorRoleSupporting": "Phụ",
+  "actorRoleBackground": "Quần chúng"
 }

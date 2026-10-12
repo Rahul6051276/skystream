@@ -1430,6 +1430,9 @@ class AppLocalizationsMr extends AppLocalizations {
   String get showResize => 'Resize button';
 
   @override
+  String get showRotate => 'फिरवण्याचे बटण';
+
+  @override
   String get showPlaybackSpeed => 'Playback speed button';
 
   @override
@@ -2346,4 +2349,37 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get swipeAgainToBoost => 'Swipe up again to go past 100%';
+
+  @override
+  String get showStatusOngoing => 'सुरू आहे';
+
+  @override
+  String get showStatusCompleted => 'पूर्ण';
+
+  @override
+  String get comingSoon => 'लवकरच येत आहे';
+
+  @override
+  String episodeAirsOn(String date) {
+    return '$date रोजी प्रसारण';
+  }
+
+  @override
+  String seasonNumberAndName(Object number, String name) {
+    return 'सीझन $number: $name';
+  }
+
+  @override
+  String castLine(String names) {
+    return 'कलाकार: $names';
+  }
+
+  @override
+  String get actorRoleMain => 'मुख्य';
+
+  @override
+  String get actorRoleSupporting => 'सहाय्यक';
+
+  @override
+  String get actorRoleBackground => 'दुय्यम';
 }

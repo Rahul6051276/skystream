@@ -462,22 +462,38 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # 22.04, deliberately, not ubuntu-latest. The runner's glibc becomes
-          # the floor for the shipped .deb and tarball: 22.04 is glibc 2.35,
-          # 24.04 is 2.39. Building on 24.04 silently drops every user
-          # on Ubuntu 22.04 LTS, Debian 12 and anything else below 2.39 -
-          # they can no longer run an artifact that worked last release.
-          # If this label is ever retired, bumping it is a user-facing decision
-          # about the minimum supported distro, not a maintenance detail.
-          - os: ubuntu-22.04
+          - os: ubuntu-26.04
             arch: x64
             torrserver_binary: TorrServer-linux-amd64
             java_arch: x64
-          - os: ubuntu-22.04-arm
+          - os: ubuntu-26.04-arm
             arch: arm64
             torrserver_binary: TorrServer-linux-arm64
             java_arch: aarch64
+    # The newest runners, building inside Ubuntu 22.04. The build's glibc is
+    # the floor for the shipped .deb, tarball and AppImage: 22.04 is glibc
+    # 2.35, so Ubuntu 22.04, Debian 12 and everything newer can run them. Built
+    # on the runner itself (26.04, glibc 2.43) they would no longer start on
+    # Ubuntu 22.04 or 24.04, or Debian 12 or 13. Raising this image is a
+    # user-facing decision about the minimum supported distro, not a
+    # maintenance detail.
+    container: ubuntu:22.04
     steps:
+      # The image is bare: steps run as root, and there is no sudo, git, curl
+      # or jq. git first, so actions/checkout makes a real clone (the AppImage
+      # script dates its metadata from the last commit) rather than unpacking
+      # a tarball; curl, jq and xz are what the Flutter setup uses.
+      - name: Prepare Build Container
+        run: |
+          apt-get update -o Acquire::Retries=5 -o Acquire::http::Timeout=30
+          apt-get install -y --no-install-recommends \
+            ca-certificates git curl jq unzip xz-utils zip
+          # ports.ubuntu.com, which arm64 uses, resets plain-HTTP connections
+          # often enough to flake the job: HTTPS from here on.
+          sed -i 's|http://ports.ubuntu.com|https://ports.ubuntu.com|g' \
+            /etc/apt/sources.list /etc/apt/sources.list.d/*.list 2>/dev/null || true
+          # The checkout belongs to the runner's user, not to root.
+          git config --global --add safe.directory '*'
       - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.inputs.branch }}
@@ -494,18 +510,17 @@ jobs:
 
       - name: Install Linux Dependencies
         run: |
-          # 1. Switch ports.ubuntu.com from HTTP (port 80 origin) to HTTPS (port 443 CDN) to prevent TCP resets
-          sudo sed -i 's|http://ports.ubuntu.com|https://ports.ubuntu.com|g' /etc/apt/sources.list /etc/apt/sources.list.d/*.list 2>/dev/null || true
-          
-          # 2. Update package index and ensure failures halt execution instead of silently ignoring stale index errors
-          sudo apt-get update -o Acquire::Retries=5 -o Acquire::http::Timeout=30
-          
-          # 3. Install required libraries with --no-install-recommends to avoid fetching 190+ bloated recommended packages (tilix, pocketsphinx, etc.)
-          sudo apt-get install -y --no-install-recommends \
-            clang cmake ninja-build pkg-config \
+          # --no-install-recommends: without it apt fetches 190+ recommended
+          # packages (tilix, pocketsphinx...) the build never touches. g++
+          # because packages/flutter_js_ng compiles QuickJS with gcc and g++ by
+          # name, and file because appimagetool refuses to run without it; the
+          # runner images have both preinstalled, the container has neither.
+          apt-get update -o Acquire::Retries=5 -o Acquire::http::Timeout=30
+          apt-get install -y --no-install-recommends \
+            clang g++ cmake ninja-build pkg-config file \
             libgtk-3-dev liblzma-dev libvlc-dev libasound2-dev libsecret-1-dev \
             libwebkit2gtk-4.1-dev
-          
+
       - name: Install Flutter Dependencies
         run: |
           flutter config --enable-linux-desktop
@@ -576,7 +591,7 @@ jobs:
           # Smoke run: the app itself must be up 20 seconds in, so AppRun found
           # every library and the binary started from inside the image. Unpacked
           # to run, as the runner may have no FUSE.
-          sudo apt-get install -y --no-install-recommends xvfb
+          apt-get install -y --no-install-recommends xvfb xauth procps
           APPIMAGE_EXTRACT_AND_RUN=1 timeout 60 xvfb-run -a "./$APPIMAGE" > appimage-smoke.log 2>&1 &
           sleep 20
           if ! pgrep -x skystream > /dev/null; then

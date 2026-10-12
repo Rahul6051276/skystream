@@ -602,6 +602,7 @@
   "playerControls": "Player Controls",
   "showPip": "Picture-in-Picture button",
   "showResize": "Resize button",
+  "showRotate": "Tombol putar",
   "showPlaybackSpeed": "Playback speed button",
   "playerControlsSubtitle": "Show or hide player control buttons",
   "exploreAnime": "Jelajahi Anime",
@@ -624,5 +625,14 @@
   "sourcesEmptyNoScrapers": "Tidak ada scraper aktif. Tambahkan di 'Nuvio Plugins'.",
   "sourcesEmptyAllFailed": "Semua scraper gagal. Periksa koneksi Anda atau perbarui scraper.",
   "sourcesEmptySomeFailed": "Tautan tidak ditemukan. {failed} dari {total} scraper gagal.",
-  "sourcesEmptyNothingFound": "Tidak ada scraper Anda yang punya judul ini."
+  "sourcesEmptyNothingFound": "Tidak ada scraper Anda yang punya judul ini.",
+  "showStatusOngoing": "Sedang tayang",
+  "showStatusCompleted": "Tamat",
+  "comingSoon": "Segera hadir",
+  "episodeAirsOn": "Tayang {date}",
+  "seasonNumberAndName": "Musim {number}: {name}",
+  "castLine": "Pemeran: {names}",
+  "actorRoleMain": "Utama",
+  "actorRoleSupporting": "Pendukung",
+  "actorRoleBackground": "Figuran"
 }

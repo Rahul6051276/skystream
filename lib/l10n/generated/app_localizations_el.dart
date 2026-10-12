@@ -1445,6 +1445,9 @@ class AppLocalizationsEl extends AppLocalizations {
   String get showResize => 'Resize button';
 
   @override
+  String get showRotate => 'Κουμπί περιστροφής';
+
+  @override
   String get showPlaybackSpeed => 'Playback speed button';
 
   @override
@@ -2361,4 +2364,37 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get swipeAgainToBoost => 'Swipe up again to go past 100%';
+
+  @override
+  String get showStatusOngoing => 'Σε εξέλιξη';
+
+  @override
+  String get showStatusCompleted => 'Ολοκληρώθηκε';
+
+  @override
+  String get comingSoon => 'Έρχεται σύντομα';
+
+  @override
+  String episodeAirsOn(String date) {
+    return 'Προβολή στις $date';
+  }
+
+  @override
+  String seasonNumberAndName(Object number, String name) {
+    return 'Σεζόν $number: $name';
+  }
+
+  @override
+  String castLine(String names) {
+    return 'Ηθοποιοί: $names';
+  }
+
+  @override
+  String get actorRoleMain => 'Πρωταγωνιστικός';
+
+  @override
+  String get actorRoleSupporting => 'Δευτερεύων';
+
+  @override
+  String get actorRoleBackground => 'Κομπάρσος';
 }

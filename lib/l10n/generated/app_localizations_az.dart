@@ -1440,6 +1440,9 @@ class AppLocalizationsAz extends AppLocalizations {
   String get showResize => 'Ölçü düyməsi';
 
   @override
+  String get showRotate => 'Döndərmə düyməsi';
+
+  @override
   String get showPlaybackSpeed => 'Oxutma sürəti düyməsi';
 
   @override
@@ -2354,4 +2357,37 @@ class AppLocalizationsAz extends AppLocalizations {
 
   @override
   String get swipeAgainToBoost => 'Swipe up again to go past 100%';
+
+  @override
+  String get showStatusOngoing => 'Davam edir';
+
+  @override
+  String get showStatusCompleted => 'Tamamlanıb';
+
+  @override
+  String get comingSoon => 'Tezliklə';
+
+  @override
+  String episodeAirsOn(String date) {
+    return '$date tarixində yayımlanır';
+  }
+
+  @override
+  String seasonNumberAndName(Object number, String name) {
+    return 'Mövsüm $number: $name';
+  }
+
+  @override
+  String castLine(String names) {
+    return 'Aktyor heyəti: $names';
+  }
+
+  @override
+  String get actorRoleMain => 'Əsas';
+
+  @override
+  String get actorRoleSupporting => 'Köməkçi';
+
+  @override
+  String get actorRoleBackground => 'Epizodik';
 }

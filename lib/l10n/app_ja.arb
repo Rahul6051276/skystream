@@ -599,6 +599,7 @@
   "playerControls": "Player Controls",
   "showPip": "Picture-in-Picture button",
   "showResize": "Resize button",
+  "showRotate": "回転ボタン",
   "showPlaybackSpeed": "Playback speed button",
   "playerControlsSubtitle": "Show or hide player control buttons",
   "exploreAnime": "アニメを探す",
@@ -624,5 +625,14 @@
   "sourcesEmptyNoScrapers": "有効なスクレイパーがありません。'Nuvio Plugins' で追加してください。",
   "sourcesEmptyAllFailed": "すべてのスクレイパーが失敗しました。接続を確認するか、スクレイパーを更新してください。",
   "sourcesEmptySomeFailed": "リンクが見つかりません。{total} 件中 {failed} 件のスクレイパーが失敗しました。",
-  "sourcesEmptyNothingFound": "どのスクレイパーにもこのタイトルはありません。"
+  "sourcesEmptyNothingFound": "どのスクレイパーにもこのタイトルはありません。",
+  "showStatusOngoing": "放送中",
+  "showStatusCompleted": "完結",
+  "comingSoon": "近日公開",
+  "episodeAirsOn": "{date}放送",
+  "seasonNumberAndName": "シーズン{number}：{name}",
+  "castLine": "キャスト：{names}",
+  "actorRoleMain": "メイン",
+  "actorRoleSupporting": "サブ",
+  "actorRoleBackground": "モブ"
 }

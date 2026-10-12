@@ -599,6 +599,7 @@
   "playerControls": "Player Controls",
   "showPip": "Picture-in-Picture button",
   "showResize": "Resize button",
+  "showRotate": "Κουμπί περιστροφής",
   "showPlaybackSpeed": "Playback speed button",
   "playerControlsSubtitle": "Show or hide player control buttons",
   "exploreAnime": "Εξερεύνηση anime",
@@ -624,5 +625,14 @@
   "sourcesEmptyNoScrapers": "Κανένα ενεργό scraper. Προσθέστε ένα στο 'Nuvio Plugins'.",
   "sourcesEmptyAllFailed": "Όλα τα scrapers απέτυχαν. Ελέγξτε τη σύνδεσή σας ή ενημερώστε τα.",
   "sourcesEmptySomeFailed": "Δεν βρέθηκαν σύνδεσμοι. Απέτυχαν {failed} από {total} scrapers.",
-  "sourcesEmptyNothingFound": "Κανένα από τα scrapers σας δεν έχει αυτόν τον τίτλο."
+  "sourcesEmptyNothingFound": "Κανένα από τα scrapers σας δεν έχει αυτόν τον τίτλο.",
+  "showStatusOngoing": "Σε εξέλιξη",
+  "showStatusCompleted": "Ολοκληρώθηκε",
+  "comingSoon": "Έρχεται σύντομα",
+  "episodeAirsOn": "Προβολή στις {date}",
+  "seasonNumberAndName": "Σεζόν {number}: {name}",
+  "castLine": "Ηθοποιοί: {names}",
+  "actorRoleMain": "Πρωταγωνιστικός",
+  "actorRoleSupporting": "Δευτερεύων",
+  "actorRoleBackground": "Κομπάρσος"
 }

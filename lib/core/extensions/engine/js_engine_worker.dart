@@ -1129,7 +1129,7 @@ const _kEntitiesJs = r"""
   class MultimediaItem {
     constructor(params) {
       Object.assign(this, {
-        type: 'movie', status: 'ongoing', playbackPolicy: 'none',
+        type: 'movie', status: 'unknown', playbackPolicy: 'none',
         isAdult: false, streams: [], syncData: {}, ...params
       });
     }

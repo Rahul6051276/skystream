@@ -2707,6 +2707,12 @@ abstract class AppLocalizations {
   /// **'Resize button'**
   String get showResize;
 
+  /// No description provided for @showRotate.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate button'**
+  String get showRotate;
+
   /// No description provided for @showPlaybackSpeed.
   ///
   /// In en, this message translates to:
@@ -4116,6 +4122,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Swipe up again to go past 100%'**
   String get swipeAgainToBoost;
+
+  /// Details page: a show still airing new episodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Ongoing'**
+  String get showStatusOngoing;
+
+  /// Details page: a show that has finished airing.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get showStatusCompleted;
+
+  /// Details page: shown instead of Play for a title not out yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming soon'**
+  String get comingSoon;
+
+  /// Episode card: an episode not out yet, with its air date.
+  ///
+  /// In en, this message translates to:
+  /// **'Airs {date}'**
+  String episodeAirsOn(String date);
+
+  /// Season chip for a season with its own name.
+  ///
+  /// In en, this message translates to:
+  /// **'Season {number}: {name}'**
+  String seasonNumberAndName(Object number, String name);
+
+  /// Details page: the cast as one line, when there are no photos.
+  ///
+  /// In en, this message translates to:
+  /// **'Cast: {names}'**
+  String castLine(String names);
+
+  /// Cast card: a main character.
+  ///
+  /// In en, this message translates to:
+  /// **'Main'**
+  String get actorRoleMain;
+
+  /// Cast card: a supporting character.
+  ///
+  /// In en, this message translates to:
+  /// **'Supporting'**
+  String get actorRoleSupporting;
+
+  /// Cast card: a background (minor) character.
+  ///
+  /// In en, this message translates to:
+  /// **'Background'**
+  String get actorRoleBackground;
 }
 
 class _AppLocalizationsDelegate

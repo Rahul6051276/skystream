@@ -599,6 +599,7 @@
   "playerControls": "Player Controls",
   "showPip": "Picture-in-Picture button",
   "showResize": "Resize button",
+  "showRotate": "Копче за ротирање",
   "showPlaybackSpeed": "Playback speed button",
   "playerControlsSubtitle": "Show or hide player control buttons",
   "exploreAnime": "Истражи аниме",
@@ -624,5 +625,14 @@
   "sourcesEmptyNoScrapers": "Нема вклучени скрејпери. Додајте во 'Nuvio Plugins'.",
   "sourcesEmptyAllFailed": "Сите скрејпери не успеаја. Проверете ја врската или ажурирајте ги.",
   "sourcesEmptySomeFailed": "Не се најдени врски. {failed} од {total} скрејпери не успеаја.",
-  "sourcesEmptyNothingFound": "Ниту еден од вашите скрејпери го нема овој наслов."
+  "sourcesEmptyNothingFound": "Ниту еден од вашите скрејпери го нема овој наслов.",
+  "showStatusOngoing": "Во тек",
+  "showStatusCompleted": "Завршена",
+  "comingSoon": "Наскоро",
+  "episodeAirsOn": "Се емитува на {date}",
+  "seasonNumberAndName": "Сезона {number}: {name}",
+  "castLine": "Актерска екипа: {names}",
+  "actorRoleMain": "Главна",
+  "actorRoleSupporting": "Споредна",
+  "actorRoleBackground": "Епизодна"
 }

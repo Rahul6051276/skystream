@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -167,6 +168,24 @@ void main() {
       expect(foldForSearch('അവന\u{D4D}\u{200D}'), 'അവ\u{D7B}');
     });
 
+    test('writes Traditional Chinese characters as their Simplified ones', () {
+      expect(foldForSearch('慶餘年'), foldForSearch('庆余年'));
+      expect(foldForSearch('甄嬛傳'), '甄嬛传');
+      expect(foldForSearch('東京愛情故事'), '东京爱情故事');
+      // Two Traditional characters, one Simplified one.
+      expect(foldForSearch('發'), foldForSearch('髮'));
+    });
+
+    // 復, 著 and 裡 are Simplified too, but mainland titles write them 复, 着
+    // and 里: written as those, a search in either script finds the other.
+    // Search only filters what a site returned, so where two words meet (乾隆
+    // and 干) nothing is lost.
+    test('writes a character with a second Simplified form as that one', () {
+      expect(foldForSearch('復仇者聯盟'), foldForSearch('复仇者联盟'));
+      expect(foldForSearch('活著'), foldForSearch('活着'));
+      expect(foldForSearch('這裡'), foldForSearch('这里'));
+    });
+
     test('drops a zero-width joiner or non-joiner after a virama', () {
       expect(foldForSearch('क\u{94D}\u{200D}ष'), 'क\u{94D}ष');
       expect(foldForSearch('ന\u{D4D}\u{200C}ന'), 'ന\u{D4D}ന');
@@ -233,10 +252,11 @@ void main() {
         );
         return;
       }
+      // UTF-8 whatever the system's code page: the table has Chinese in it.
       final made = Process.runSync('python3', [
         '-I',
         'tool/search_fold_table.py',
-      ]);
+      ], stdoutEncoding: utf8);
       expect(made.exitCode, 0, reason: '${made.stderr}');
       expect(made.stdout, table);
     });

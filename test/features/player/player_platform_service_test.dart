@@ -515,6 +515,220 @@ void main() {
     });
   });
 
+  group('playerCanRotate', () {
+    test('a phone, and a tablet that turns when asked', () {
+      expect(playerCanRotate(const DeviceProfile()), isTrue);
+      expect(playerCanRotate(const DeviceProfile(isTablet: true)), isTrue);
+    });
+
+    test('not a tablet that ignores the request: an iPad, Android 16', () {
+      const ignores = DeviceProfile(
+        isTablet: true,
+        obeysOrientationRequests: false,
+      );
+      expect(playerCanRotate(ignores), isFalse);
+    });
+
+    test('not a television, a desktop, or a device not known yet', () {
+      expect(playerCanRotate(const DeviceProfile(isTv: true)), isFalse);
+      expect(playerCanRotate(const DeviceProfile(isDesktopOS: true)), isFalse);
+      expect(playerCanRotate(null), isFalse);
+    });
+  });
+
+  /// The rotate button: the video turns the device as it settles, and a press
+  /// turns it the other way for the rest of that video (the owner's design,
+  /// 2026-10-11).
+  group('flipOrientation', () {
+    /// A handset held upright, as the view reports it.
+    void upright(WidgetTester tester) {
+      tester.view.physicalSize = const Size(1080, 1920);
+      addTearDown(tester.view.reset);
+    }
+
+    /// The handset after the OS has turned it to [pin].
+    void turned(WidgetTester tester, List<String> pin) {
+      tester.view.physicalSize = pin == landscape
+          ? const Size(1920, 1080)
+          : const Size(1080, 1920);
+    }
+
+    testWidgets('a press turns the handset the other way, at once', (
+      tester,
+    ) async {
+      upright(tester);
+      final service = PlayerPlatformService();
+      read(service, PlayerFormFactor.phone, landscapeBuffer);
+      await waitOutSettle(tester);
+      turned(tester, landscape);
+      pinned.clear();
+
+      service.flipOrientation(PlayerFormFactor.phone);
+
+      expect(pinned, [portrait], reason: 'the viewer asked: no settle');
+      expect(service.viewerChoseOrientation, isTrue);
+
+      service.restoreOrientation();
+    });
+
+    testWidgets('the video does not turn it back for the rest of that video', (
+      tester,
+    ) async {
+      upright(tester);
+      final service = PlayerPlatformService();
+      read(service, PlayerFormFactor.phone, landscapeBuffer);
+      await waitOutSettle(tester);
+      turned(tester, landscape);
+      service.flipOrientation(PlayerFormFactor.phone);
+      turned(tester, portrait);
+      pinned.clear();
+
+      // The rest of the film, a variant switch and a failover gap included.
+      read(service, PlayerFormFactor.phone, landscapeBuffer, times: 8);
+      read(service, PlayerFormFactor.phone, null, times: 2);
+      read(service, PlayerFormFactor.phone, const Size(1280, 720), times: 8);
+      await waitOutSettle(tester);
+
+      expect(
+        pinned,
+        isEmpty,
+        reason:
+            'an automatic turn that undoes the button the viewer just pressed '
+            'reads as a bug',
+      );
+
+      service.restoreOrientation();
+    });
+
+    testWidgets('a second press turns it back, even mid-turn', (tester) async {
+      upright(tester);
+      final service = PlayerPlatformService();
+      read(service, PlayerFormFactor.phone, landscapeBuffer);
+      await waitOutSettle(tester);
+      turned(tester, landscape);
+      pinned.clear();
+
+      // Two quick presses: the window has not finished turning when the
+      // second lands, so it still measures landscape.
+      service
+        ..flipOrientation(PlayerFormFactor.phone)
+        ..flipOrientation(PlayerFormFactor.phone);
+
+      expect(pinned, [portrait, landscape]);
+
+      service.restoreOrientation();
+    });
+
+    testWidgets('a press before anything has settled turns from the way the '
+        'window is', (tester) async {
+      upright(tester);
+      final service = PlayerPlatformService();
+
+      service.flipOrientation(PlayerFormFactor.phone);
+
+      expect(pinned, [landscape]);
+
+      // And the first shape to settle afterwards does not take it back.
+      read(service, PlayerFormFactor.phone, portraitBuffer);
+      await waitOutSettle(tester);
+      expect(pinned, [landscape]);
+
+      service.restoreOrientation();
+    });
+
+    testWidgets("the next video turns the device to its own shape again", (
+      tester,
+    ) async {
+      upright(tester);
+      final service = PlayerPlatformService();
+      read(service, PlayerFormFactor.phone, landscapeBuffer);
+      await waitOutSettle(tester);
+      turned(tester, landscape);
+      service.flipOrientation(PlayerFormFactor.phone);
+      turned(tester, portrait);
+      pinned.clear();
+
+      service.followVideo();
+      expect(service.viewerChoseOrientation, isFalse);
+      // The gap between two episodes holds the viewer's pin, as it holds an
+      // automatic one, until the next episode's shape has settled.
+      read(service, PlayerFormFactor.phone, null, times: 4);
+      await waitOutSettle(tester);
+      expect(pinned, isEmpty);
+
+      read(service, PlayerFormFactor.phone, landscapeBuffer);
+      await waitOutSettle(tester);
+      expect(pinned, [landscape]);
+
+      service.restoreOrientation();
+    });
+
+    testWidgets('a television, a desktop or an unknown device has nothing to '
+        'turn', (tester) async {
+      upright(tester);
+      for (final form in [
+        PlayerFormFactor.tv,
+        PlayerFormFactor.desktop,
+        PlayerFormFactor.unknown,
+      ]) {
+        final service = PlayerPlatformService();
+        service.flipOrientation(form);
+        expect(service.viewerChoseOrientation, isFalse, reason: '$form');
+        service.restoreOrientation();
+      }
+
+      expect(pinned, isEmpty);
+    });
+
+    testWidgets('leaving hands the device back, and forgets the press', (
+      tester,
+    ) async {
+      upright(tester);
+      final service = PlayerPlatformService();
+      read(service, PlayerFormFactor.phone, landscapeBuffer);
+      await waitOutSettle(tester);
+      turned(tester, landscape);
+      service.flipOrientation(PlayerFormFactor.phone);
+      pinned.clear();
+
+      service.restoreOrientation();
+      expect(pinned, [<String>[]]);
+      expect(service.viewerChoseOrientation, isFalse);
+
+      // The next session follows its video from the first settle.
+      pinned.clear();
+      read(service, PlayerFormFactor.phone, landscapeBuffer);
+      await waitOutSettle(tester);
+      expect(pinned, [landscape]);
+
+      service.restoreOrientation();
+    });
+
+    testWidgets('iOS goes back to the way the app was before the press', (
+      tester,
+    ) async {
+      upright(tester);
+      const followChannel = MethodChannel('dev.akash.skystream/orientation');
+      final calls = <String>[];
+      messenger.setMockMethodCallHandler(followChannel, (call) async {
+        calls.add('${call.method} ${call.arguments}');
+        return null;
+      });
+      addTearDown(
+        () => messenger.setMockMethodCallHandler(followChannel, null),
+      );
+      final service = PlayerPlatformService();
+
+      // Nothing settled first: the press is the session's first turn.
+      service.flipOrientation(PlayerFormFactor.phone);
+      turned(tester, landscape);
+      service.restoreOrientation();
+      await tester.pump();
+
+      expect(calls, ['followDevice {fallback: portrait}']);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+  });
+
   group('restoreOrientation', () {
     testWidgets(
       'a phone that was pinned goes back to the system\'s own orientation',

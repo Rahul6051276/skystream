@@ -1424,6 +1424,9 @@ class AppLocalizationsBg extends AppLocalizations {
   String get showResize => 'Resize button';
 
   @override
+  String get showRotate => 'Бутон за завъртане';
+
+  @override
   String get showPlaybackSpeed => 'Playback speed button';
 
   @override
@@ -2340,4 +2343,37 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get swipeAgainToBoost => 'Swipe up again to go past 100%';
+
+  @override
+  String get showStatusOngoing => 'Излъчва се';
+
+  @override
+  String get showStatusCompleted => 'Завършен';
+
+  @override
+  String get comingSoon => 'Очаквайте скоро';
+
+  @override
+  String episodeAirsOn(String date) {
+    return 'Излъчване на $date';
+  }
+
+  @override
+  String seasonNumberAndName(Object number, String name) {
+    return 'Сезон $number: $name';
+  }
+
+  @override
+  String castLine(String names) {
+    return 'Актьорски състав: $names';
+  }
+
+  @override
+  String get actorRoleMain => 'Главна';
+
+  @override
+  String get actorRoleSupporting => 'Поддържаща';
+
+  @override
+  String get actorRoleBackground => 'Епизодична';
 }

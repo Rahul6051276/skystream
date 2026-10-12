@@ -3251,6 +3251,8 @@ class _VlcPlayerScreenState extends ConsumerState<VlcPlayerScreen>
     // A deliberate switch, not a failure: the walk that led here is over.
     _tried.clear();
     _revertTo = null;
+    // Different media, so a rotate press made over the last file is spent.
+    _platform.followVideo();
     await _openAttempt(_attemptIndex, startAt: Duration.zero);
   }
 
@@ -3452,6 +3454,9 @@ class _VlcPlayerScreenState extends ConsumerState<VlcPlayerScreen>
     _torrentPoll?.cancel();
     _torrentPoll = null;
     _publishPanelData();
+    // A rotate press held the last episode; this one turns the handset to its
+    // own shape again once that has settled.
+    _platform.followVideo();
 
     // The outgoing episode's last picture comes down here, before the first
     // await, and not in _openAttempt where every other attempt drops it.
@@ -3729,13 +3734,25 @@ class _VlcPlayerScreenState extends ConsumerState<VlcPlayerScreen>
   ///
   /// Nothing once [_handBack] has run: the engine plays on while the route
   /// leaves, and its next tick would start the settle again and turn the page
-  /// underneath sideways.
+  /// underneath sideways. Nor before this attempt's media is with the engine
+  /// ([_handedToEngine]): until then every tick is the outgoing video's, and
+  /// its shape is not the next one's to settle on.
   void _syncOrientation(VlcPlayerValue value) {
-    if (_handedBack) return;
+    if (_handedBack || !_handedToEngine) return;
     _platform.applyVideoOrientation(
       _form,
       renderedSize: value.displayVideoSize,
     );
+  }
+
+  /// The rotate button: turns the handset the other way for the rest of this
+  /// video. [_startEpisode] and a torrent file switch hand the say back to the
+  /// video, since each opens a different one; a failover is the same video
+  /// from another source and keeps the viewer's choice.
+  void _flipOrientation() {
+    if (_handedBack) return;
+    _platform.flipOrientation(_form);
+    setState(() {});
   }
 
   /// Raises the up-next card in the closing seconds of an episode.
@@ -4257,7 +4274,9 @@ class _VlcPlayerScreenState extends ConsumerState<VlcPlayerScreen>
     // teardown calls run from places that have no context. The profile
     // resolves asynchronously, so this is also how a session that started
     // before it landed picks it up.
-    _form = playerFormFactorOf(ref.watch(deviceProfileProvider).asData?.value);
+    final profile = ref.watch(deviceProfileProvider).asData?.value;
+    _form = playerFormFactorOf(profile);
+    final canRotate = playerCanRotate(profile);
     final isTv = _form == PlayerFormFactor.tv;
 
     return PopScope(
@@ -4340,6 +4359,11 @@ class _VlcPlayerScreenState extends ConsumerState<VlcPlayerScreen>
                   onFitChanged: (fit) {
                     if (mounted) setState(() => _fit = fit);
                   },
+                  // Only where the OS turns the device when asked: a phone, or
+                  // a tablet that has not stopped listening (see
+                  // playerCanRotate).
+                  onRotate: canRotate ? _flipOrientation : null,
+                  rotationHeld: _platform.viewerChoseOrientation,
                   title: _chromeTitle(l10n),
                   subtitle: _chromeSubtitle(),
                   onBack: () => _handleBack(fromChrome: true),

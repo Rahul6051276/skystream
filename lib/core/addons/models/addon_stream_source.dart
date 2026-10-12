@@ -2,6 +2,7 @@
 library;
 
 import '../../utils/file_size_formatter.dart';
+import '../../../features/player/domain/track_language.dart';
 
 class AddonSubtitleTrack {
   final String id;
@@ -9,11 +10,16 @@ class AddonSubtitleTrack {
   final String lang;
   final String addonName;
 
+  /// The release the subtitle was made for, when the add-on names it: the
+  /// OpenSubtitles add-on does, beside the plain Stremio fields.
+  final String? release;
+
   const AddonSubtitleTrack({
     required this.id,
     required this.url,
     required this.lang,
     this.addonName = '',
+    this.release,
   });
 
   static AddonSubtitleTrack? fromJson(
@@ -29,88 +35,48 @@ class AddonSubtitleTrack {
       url: url,
       lang: lang.isEmpty ? 'en' : lang,
       addonName: addonName,
+      release: _release(json),
     );
+  }
+
+  /// The release [json] names, else its file without the extension.
+  static String? _release(Map<String, dynamic> json) {
+    final release = json['movieReleaseName'];
+    if (release is String && release.trim().isNotEmpty) return release.trim();
+    final file = json['subtitleFileName'];
+    if (file is! String || file.trim().isEmpty) return null;
+    final name = file.trim();
+    final dot = name.lastIndexOf('.');
+    return dot > 0 ? name.substring(0, dot) : name;
   }
 
   String get label => prettyLanguage(lang);
 
+  /// The language [code] names, as the player names languages - with the
+  /// variants the OpenSubtitles add-on files apart - or [code] as the add-on
+  /// gave it.
   static String prettyLanguage(String code) {
-    const names = <String, String>{
-      'en': 'English',
-      'eng': 'English',
-      'es': 'Spanish',
-      'spa': 'Spanish',
-      'fr': 'French',
-      'fre': 'French',
-      'fra': 'French',
-      'de': 'German',
-      'ger': 'German',
-      'deu': 'German',
-      'it': 'Italian',
-      'ita': 'Italian',
-      'pt': 'Portuguese',
-      'por': 'Portuguese',
-      'ru': 'Russian',
-      'rus': 'Russian',
-      'ar': 'Arabic',
-      'ara': 'Arabic',
-      'hi': 'Hindi',
-      'hin': 'Hindi',
-      'ur': 'Urdu',
-      'urd': 'Urdu',
-      'bn': 'Bengali',
-      'ben': 'Bengali',
-      'ta': 'Tamil',
-      'tam': 'Tamil',
-      'te': 'Telugu',
-      'tel': 'Telugu',
-      'tr': 'Turkish',
-      'tur': 'Turkish',
-      'ja': 'Japanese',
-      'jpn': 'Japanese',
-      'ko': 'Korean',
-      'kor': 'Korean',
-      'zh': 'Chinese',
-      'chi': 'Chinese',
-      'zho': 'Chinese',
-      'nl': 'Dutch',
-      'dut': 'Dutch',
-      'nld': 'Dutch',
-      'pl': 'Polish',
-      'pol': 'Polish',
-      'sv': 'Swedish',
-      'swe': 'Swedish',
-      'fa': 'Persian',
-      'per': 'Persian',
-      'fas': 'Persian',
-      'id': 'Indonesian',
-      'ind': 'Indonesian',
-      'vi': 'Vietnamese',
-      'vie': 'Vietnamese',
-      'th': 'Thai',
-      'tha': 'Thai',
-      'uk': 'Ukrainian',
-      'ukr': 'Ukrainian',
-      'el': 'Greek',
-      'gre': 'Greek',
-      'ell': 'Greek',
-      'he': 'Hebrew',
-      'heb': 'Hebrew',
-      'cs': 'Czech',
-      'cze': 'Czech',
-      'ces': 'Czech',
-      'ro': 'Romanian',
-      'rum': 'Romanian',
-      'ron': 'Romanian',
-      'hu': 'Hungarian',
-      'hun': 'Hungarian',
-    };
     final key = code.trim().toLowerCase();
-    final match = names[key];
-    if (match != null) return match;
     if (key.isEmpty) return 'Unknown';
+    final variant = _variants[key];
+    if (variant != null) return variant;
+    final iso = languageCodeOf(key);
+    final name = iso == null ? null : languageNameForCode(iso);
+    if (name != null) return name;
     return key[0].toUpperCase() + key.substring(1);
   }
+
+  /// A language's variants, by the OpenSubtitles add-on's own codes and by
+  /// the tags other add-ons use.
+  static const Map<String, String> _variants = {
+    'pob': 'Portuguese (Brazil)',
+    'pt-br': 'Portuguese (Brazil)',
+    'spl': 'Spanish (Latin America)',
+    'spn': 'Spanish (Spain)',
+    'zht': 'Chinese (Traditional)',
+    'zh-tw': 'Chinese (Traditional)',
+    'zhe': 'Chinese (Bilingual)',
+  };
 }
 
 enum AddonStreamKind { direct, torrent, youtube, external, unknown }

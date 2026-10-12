@@ -48,6 +48,21 @@ class _RecordingPlayerSettings extends PlayerSettingsNotifier {
   }
 }
 
+/// Records the rotate switch's writes without opening Hive.
+class _RecordingRotate extends PlayerSettingsNotifier {
+  _RecordingRotate(this.written);
+
+  final List<bool> written;
+
+  @override
+  Future<PlayerSettings> build() async => const PlayerSettings();
+
+  @override
+  Future<void> setShowRotate(bool val) async {
+    written.add(val);
+  }
+}
+
 /// Captures the preference selected by a remote without opening Hive.
 class _RecordingAudioLanguage extends PlayerSettingsNotifier {
   _RecordingAudioLanguage(this.initial, this.chosen);
@@ -137,8 +152,8 @@ void main() {
       const String episodes = 'Previous / next episode buttons';
       const String volume = 'Volume button';
 
-      /// The label the retired rotate switch carried. No device may offer it:
-      /// the player draws no rotate button for it to hide.
+      /// Offered only where the player draws the button: a phone or a tablet,
+      /// the devices it turns.
       const String rotate = 'Rotate button';
 
       /// (case name, platform, profile, rows that must be offered).
@@ -147,13 +162,13 @@ void main() {
           'Android phone — the only device that gets the PiP row',
           TargetPlatform.android,
           const DeviceProfile(),
-          [volume, pip, resize, speed, episodes],
+          [volume, pip, resize, rotate, speed, episodes],
         ),
         (
           'Android tablet',
           TargetPlatform.android,
           const DeviceProfile(isTablet: true),
-          [volume, pip, resize, speed, episodes],
+          [volume, pip, resize, rotate, speed, episodes],
         ),
         (
           'Android TV — nothing to shrink into',
@@ -165,12 +180,18 @@ void main() {
           'iPhone — no OS-level PiP for us',
           TargetPlatform.iOS,
           const DeviceProfile(),
-          [volume, resize, speed, episodes],
+          [volume, resize, rotate, speed, episodes],
         ),
         (
-          'iPad',
+          'Android 16 tablet — ignores orientation requests',
+          TargetPlatform.android,
+          const DeviceProfile(isTablet: true, obeysOrientationRequests: false),
+          [volume, pip, resize, speed, episodes],
+        ),
+        (
+          'iPad — ignores orientation requests',
           TargetPlatform.iOS,
-          const DeviceProfile(isTablet: true),
+          const DeviceProfile(isTablet: true, obeysOrientationRequests: false),
           [volume, resize, speed, episodes],
         ),
         (
@@ -266,30 +287,22 @@ void main() {
         );
       });
 
-      testWidgets('the rotate row is gone on the two devices that used to '
-          'get it', (tester) async {
-        // An Android phone and an Android tablet were the shapes where the
-        // retired predicate was true, so they are the shapes where a
-        // resurrected row would show up first. The player builds no rotate
-        // button on either any more (see
-        // test/features/player/orientation_follows_video_test.dart), so a
-        // switch here would move a stored boolean and change nothing.
-        for (final DeviceProfile profile in <DeviceProfile>[
-          const DeviceProfile(),
-          const DeviceProfile(isTablet: true),
-        ]) {
-          await _pumpOpener(
-            tester,
-            open: showPlayerControlsDialog,
-            platform: TargetPlatform.android,
-            profile: profile,
-          );
-          expect(find.text(rotate), findsNothing);
-          expect(find.byIcon(Icons.screen_rotation_rounded), findsNothing);
-          expect(find.byType(SwitchListTile), findsNWidgets(5));
-          await tester.tap(find.text('Close'));
-          await tester.pumpAndSettle();
-        }
+      testWidgets('the rotate row writes the setting the button reads', (
+        tester,
+      ) async {
+        final written = <bool>[];
+        await _pumpOpener(
+          tester,
+          open: showPlayerControlsDialog,
+          profile: const DeviceProfile(),
+          settings: () => _RecordingRotate(written),
+        );
+        expect(find.byIcon(Icons.screen_rotation_rounded), findsOneWidget);
+
+        await tester.tap(find.text(rotate));
+        await tester.pumpAndSettle();
+
+        expect(written, [false]);
       });
     },
   );

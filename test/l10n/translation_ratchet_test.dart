@@ -105,11 +105,9 @@ void main() {
     //  * bigPictureMode / bigPictureModeSubtitle were Steam's branding,
     //    inherited from a contributor PR. They are fullScreenMode and
     //    fullScreenModeSubtitle now.
-    //  * showRotate labelled a switch in Player Controls that hid the player's
-    //    manual rotate button. Orientation follows the video's own shape now,
-    //    the button is gone, and the switch was moving a stored boolean that
-    //    nothing read. Removing the row without the key would leave 43 locales
-    //    holding a translation for a control that does not exist.
+    //  * showRotate was retired with the player's manual rotate button and
+    //    came back with it (2026-10-11): the button now turns the handset the
+    //    other way for one video, and the switch hides it again.
     //  * bufferDepth / selectBufferDepth titled a picker offering 1 to 20
     //    minutes of read-ahead. libVLC 3 has no read-ahead-in-seconds control
     //    for it to drive - --network-caching is per-stream output latency, and
@@ -317,7 +315,6 @@ const List<String> _retired = <String>[
   'subtitleAccountsNotConfigured',
   'bigPictureMode',
   'bigPictureModeSubtitle',
-  'showRotate',
   'bufferDepth',
   'selectBufferDepth',
   'wifiQualityPreference',

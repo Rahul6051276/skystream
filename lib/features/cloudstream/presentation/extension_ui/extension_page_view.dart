@@ -39,7 +39,8 @@ class ExtensionPageView extends StatelessWidget {
   final bool? android;
 
   /// Whether the page is a window of its own over the app (Windows, Linux), which no scroll view clips: it shows only
-  /// while wholly in view. [Platform.isWindows] or [Platform.isLinux] unless a test says.
+  /// while wholly in view. Whether the app runs on Windows or Linux unless a test says - read off
+  /// [defaultTargetPlatform], not the host, so a test sees the same page on every machine it runs on.
   final bool? nativeWindow;
 
   /// In the full-screen view: the page takes all the room it's given, with no padding (Phase 7c's §2).
@@ -104,7 +105,8 @@ class ExtensionPageView extends StatelessWidget {
     if (page == null) return const Center(child: CircularProgressIndicator());
     final key = ValueKey('extension-page-${page.rid}');
     final browser = page.browser.challenge;
-    if (nativeWindow ?? (Platform.isWindows || Platform.isLinux)) {
+    if (nativeWindow ??
+        (defaultTargetPlatform == TargetPlatform.windows || defaultTargetPlatform == TargetPlatform.linux)) {
       // SkyStream's dialog for a page (Phase 7c's §8) shows in Flutter's view, which a page that is a window of its
       // own would cover: every page steps aside while one shows.
       if (pages.showsDialog) {

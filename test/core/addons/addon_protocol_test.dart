@@ -377,6 +377,57 @@ void main() {
       expect(track, isNotNull);
       expect(track!.label, 'Urdu');
     });
+
+    // As the OpenSubtitles add-on codes them (2026-10-11: 53 codes over 816
+    // subtitles of 13 titles), half of which showed as "Fin" or "Pob".
+    String label(String lang) =>
+        AddonSubtitleTrack(id: 'x', url: 'https://x/a.srt', lang: lang).label;
+
+    test('names every language the player knows, as the player names it', () {
+      expect(label('fin'), 'Finnish');
+      expect(label('hrv'), 'Croatian');
+      expect(label('slo'), 'Slovak');
+      expect(label('tgl'), 'Filipino');
+      expect(label('eng'), 'English');
+    });
+
+    test('and the variants the OpenSubtitles add-on files apart', () {
+      expect(label('pob'), 'Portuguese (Brazil)');
+      expect(label('spl'), 'Spanish (Latin America)');
+      expect(label('spn'), 'Spanish (Spain)');
+      expect(label('zht'), 'Chinese (Traditional)');
+      expect(label('zhe'), 'Chinese (Bilingual)');
+      // And as other add-ons tag them.
+      expect(label('pt-BR'), 'Portuguese (Brazil)');
+      expect(label('zh-TW'), 'Chinese (Traditional)');
+    });
+
+    test('shows a code it does not know as the add-on gave it', () {
+      expect(label('xyz'), 'Xyz');
+    });
+
+    // The OpenSubtitles add-on names the release a subtitle was made for,
+    // and its file; a plain Stremio subtitle names neither.
+    test('takes the release the add-on names, else its file', () {
+      AddonSubtitleTrack? read(Map<String, Object?> extra) =>
+          AddonSubtitleTrack.fromJson(
+            {'url': 'https://x/a.srt', 'lang': 'eng', ...extra},
+            addonName: 'A',
+            index: 0,
+          );
+      expect(
+        read({
+          'movieReleaseName': 'Breaking.Bad.S02E05.720p.BluRay.x264-EbP',
+          'subtitleFileName': 'Breaking.Bad.S02E05.720p.BluRay.x264-EbP.srt',
+        })!.release,
+        'Breaking.Bad.S02E05.720p.BluRay.x264-EbP',
+      );
+      expect(
+        read({'subtitleFileName': 'S02E05 Breakage.srt'})!.release,
+        'S02E05 Breakage',
+      );
+      expect(read({})!.release, isNull);
+    });
   });
 
   group('DebridService parsing', () {

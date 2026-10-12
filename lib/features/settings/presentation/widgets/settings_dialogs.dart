@@ -859,7 +859,7 @@ void showSubtitleDefaultDialog(
 ///
 /// Auto - the source's own choice, said in a line of its own - and then the
 /// languages the player offers everywhere, the subtitle search included
-/// ([playerLanguages]). Forty-one rows: the one in force is focused and
+/// ([playerLanguages]). Forty-five rows: the one in force is focused and
 /// scrolled into view, as in the app's own language picker.
 void showPreferredAudioLanguageDialog(
   BuildContext context,
@@ -1822,15 +1822,12 @@ bool playerCanShowPip(TargetPlatform platform, PlayerFormFactor form) =>
 /// Shows a dialog to toggle the visibility of individual player control
 /// buttons. Changes apply live via the player settings notifier.
 ///
-/// Only offers a switch for a button this device can actually draw. One row is
-/// conditional on hardware: picture-in-picture exists only on an Android
-/// handset or tablet. Offering the platforms that have no such window a switch
-/// that moves a stored boolean and changes nothing on screen is the screen
-/// lying about what it controls.
-///
-/// There is deliberately no rotate row. The player's manual rotate button went
-/// away when orientation started following the video's own shape, so the
-/// switch that hid it had nothing left to hide.
+/// Only offers a switch for a button this device can actually draw. Two rows
+/// are conditional on hardware: picture-in-picture exists only on an Android
+/// handset or tablet, and rotate only where the OS turns the device when asked
+/// ([playerCanRotate]). Offering the platforms that have no such button a
+/// switch that moves a stored boolean and changes nothing on screen is the
+/// screen lying about what it controls.
 void showPlayerControlsDialog(BuildContext context, WidgetRef ref) {
   final l10n = AppLocalizations.of(context)!;
   final notifier = ref.read(playerSettingsProvider.notifier);
@@ -1838,9 +1835,8 @@ void showPlayerControlsDialog(BuildContext context, WidgetRef ref) {
       ref.read(playerSettingsProvider).asData?.value ?? const PlayerSettings();
 
   final platform = Theme.of(context).platform;
-  final form = playerFormFactorOf(
-    ref.read(deviceProfileProvider).asData?.value,
-  );
+  final profile = ref.read(deviceProfileProvider).asData?.value;
+  final form = playerFormFactorOf(profile);
 
   final rows = <_ControlToggle>[
     (
@@ -1862,6 +1858,13 @@ void showPlayerControlsDialog(BuildContext context, WidgetRef ref) {
       setter: notifier.setShowResize,
       initial: settings.showResize,
     ),
+    if (playerCanRotate(profile))
+      (
+        icon: Icons.screen_rotation_rounded,
+        label: l10n.showRotate,
+        setter: notifier.setShowRotate,
+        initial: settings.showRotate,
+      ),
     (
       icon: Icons.speed_rounded,
       label: l10n.showPlaybackSpeed,
