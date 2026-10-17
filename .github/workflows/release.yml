@@ -518,7 +518,15 @@ jobs:
         shell: pwsh
         run: |
           $Release = "build\windows\${{ matrix.arch }}\runner\Release"
-          & "$Release\vlc-cache-gen.exe" "$Release\plugins"
+          # The folder must be given as a full path. libVLC loads each plugin
+          # with LoadLibraryExW(LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR), which refuses
+          # a relative path, and saves the cache of the folder it was given
+          # last, over the full one it made of its own plugins folder: with a
+          # relative path every plugin fails to load and plugins.dat ends up
+          # 24 bytes (measured with VLC 3.0.24's vlc-cache-gen: 309,705 bytes
+          # with the full path). The installer already passes {app}\plugins.
+          $Plugins = (Resolve-Path "$Release\plugins").Path
+          & "$Release\vlc-cache-gen.exe" $Plugins
           if ($LASTEXITCODE -ne 0) { throw "vlc-cache-gen.exe failed on the bundle" }
           $Cache = Get-Item "$Release\plugins\plugins.dat" -ErrorAction Stop
           if ($Cache.Length -lt 100000) { throw "plugins.dat is only $($Cache.Length) bytes" }
