@@ -571,7 +571,7 @@
   "apiKeyOptionalOverride": "API Key (Optional Override)",
   "enterKeyToOverrideDefault": "Enter key to override default",
   "getApiKeyFromProfile": "Get your API Key from SubSource Profile",
-  "qualityNotGuaranteed": "Quality is not guaranteed. Sources are sorted by preference, but playback depends on what the provider actually offers.",
+  "qualityNotGuaranteed": "Kalite garanti edilmez. Kaynaklar bu tercihe göre sıralanır ve birden fazla kalite sunan bir yayın bu kalitede ya da altındaki en yakın kalitede oynatılır. Oynatma, sağlayıcının gerçekte ne sunduğuna bağlıdır.",
   "keepSourcesOriginalOrder": "Keep sources in original order",
   "openLink": "Open link",
   "@loggedInAs": {
@@ -634,5 +634,14 @@
   "castLine": "Oyuncular: {names}",
   "actorRoleMain": "Başrol",
   "actorRoleSupporting": "Yardımcı rol",
-  "actorRoleBackground": "Figüran"
+  "actorRoleBackground": "Figüran",
+  "playerQuality": "Kalite",
+  "playerQualityAuto": "Otomatik",
+  "playerQualityAutoPlaying": "Otomatik · {height}",
+  "networkBufferAuto": "Otomatik (önerilen)",
+  "networkBufferAutoHint": "Her video için bit hızına ve bu cihazın belleğine göre boyutlandırılır.",
+  "devQoeLog": "QoE günlüğü",
+  "devQoeLogSubtitle": "Oynatma zamanlamalarını uygulama günlüğüne yazar",
+  "playerGoLive": "Canlıya git",
+  "playerBehindLive": "Canlıdan {time} geride"
 }
