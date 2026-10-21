@@ -19,34 +19,11 @@ class Language extends _$Language {
   }
 }
 
-// Multi-select languages provider (supports selecting multiple languages)
-final selectedLanguagesProvider =
-    StateNotifierProvider<SelectedLanguagesNotifier, Set<String>>((ref) {
+// Simple StateProvider for selected multi-languages
+final selectedLanguagesProvider = StateProvider<Set<String>>((ref) {
   final current = ref.watch(languageProvider);
-  return SelectedLanguagesNotifier({current});
+  return {current};
 });
-
-class SelectedLanguagesNotifier extends StateNotifier<Set<String>> {
-  SelectedLanguagesNotifier(super.state);
-
-  void toggle(String code) {
-    if (state.contains(code)) {
-      if (state.length > 1) { // Kam se kam 1 language select rahe
-        state = {...state}..remove(code);
-      }
-    } else {
-      state = {...state, code};
-    }
-  }
-
-  void selectAll(List<String> codes) {
-    state = codes.toSet();
-  }
-
-  void reset(String defaultCode) {
-    state = {defaultCode};
-  }
-}
 
 class LanguageOption {
   final String code;
