@@ -210,9 +210,9 @@ class _LanguageSelectorDialogState
                       icon: const Icon(Icons.check),
                       label: const Text("Apply Filter"),
                       onPressed: () {
-                        ref.read(selectedLanguagesProvider.notifier).state =
-                            Set.from(tempSelected);
-                        // Main language primary set kar do
+                        ref
+                            .read(selectedLanguagesProvider.notifier)
+                            .setSelection(Set.from(tempSelected));
                         if (tempSelected.isNotEmpty) {
                           ref
                               .read(languageProvider.notifier)
