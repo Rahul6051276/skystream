@@ -19,11 +19,22 @@ class Language extends _$Language {
   }
 }
 
-// Simple StateProvider for selected multi-languages
-final selectedLanguagesProvider = StateProvider<Set<String>>((ref) {
-  final current = ref.watch(languageProvider);
-  return {current};
-});
+class SelectedLanguagesNotifier extends Notifier<Set<String>> {
+  @override
+  Set<String> build() {
+    final current = ref.watch(languageProvider);
+    return {current};
+  }
+
+  void setSelection(Set<String> languages) {
+    state = languages;
+  }
+}
+
+final selectedLanguagesProvider =
+    NotifierProvider<SelectedLanguagesNotifier, Set<String>>(
+  SelectedLanguagesNotifier.new,
+);
 
 class LanguageOption {
   final String code;
@@ -49,7 +60,7 @@ List<LanguageOption> languageList(Ref ref) {
     LanguageOption('ur-PK', 'Urdu', 'اردو'),
     LanguageOption('ar-SA', 'Arabic', 'عربي'),
     LanguageOption('ar-AE', 'Levantine Arabic', 'عربي (الشام)'),
-    LanguageOption('as-IN', 'Assamese', 'অসমীয়া'),
+    LanguageOption('as-IN', 'Assamese', 'অसमীয়া'),
     LanguageOption('az-AZ', 'Azerbaijani', 'Azərbaycan dili'),
     LanguageOption('be-BY', 'Belarusian', 'беларуская'),
     LanguageOption('bg-BG', 'Bulgarian', 'български'),
